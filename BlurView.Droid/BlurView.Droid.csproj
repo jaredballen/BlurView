@@ -54,6 +54,7 @@
     <ItemGroup>
         <Compile Include="BlurViewRenderer.cs" />
         <Compile Include="MainActivity.cs" />
+        <Compile Include="Renderers\SKCanvasViewRenderer.cs" />
         <Compile Include="Resources\Resource.Designer.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>

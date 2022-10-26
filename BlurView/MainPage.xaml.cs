@@ -16,6 +16,7 @@ namespace BlurView
         {
             var canvas = e.Surface.Canvas;
             var size = e.Info.Size;
+            
             var center = new SKPoint(size.Width * 0.5f, size.Height * 0.5f);
             var radius = Math.Min(size.Width, size.Height) / 2;
                 

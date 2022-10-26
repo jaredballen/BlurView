@@ -17,14 +17,14 @@
                FontAttributes="Bold"
                Text="BlurView Test" />
         
-        <local:BlurView Grid.Column="0"
+        <!--<local:BlurView Grid.Column="0"
                         BackgroundColor="#73007300"
                         BlurRadius="25"
                         VerticalOptions="Start"
                         HeightRequest="50"
-                        RootView="{x:Reference RootView}" />
+                        RootView="{x:Reference RootView}" />-->
         
-        <forms:SKCanvasView Grid.ColumnSpan="2"
+        <local:SKCanvasView Grid.ColumnSpan="2"
                             HorizontalOptions="Center"
                             VerticalOptions="Center"
                             HeightRequest="100"
@@ -32,10 +32,10 @@
                             PaintSurface="SKCanvasView_OnPaintSurface"/>
         
         <local:BlurView Grid.Column="0"
-                        BackgroundColor="#73730000"
+                        BackgroundColor="#73740000"
                         BlurRadius="25"
-                        VerticalOptions="Center"
-                        HeightRequest="200"
+                        
+                        
                         RootView="{x:Reference RootView}" />
     </Grid>
 
