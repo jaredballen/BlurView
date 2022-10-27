@@ -220,9 +220,9 @@ namespace BlurView.Droid
             /// 
             if (canvas is BlurViewCanvas) return false;
             
-            Update();
-
             
+            // TODO: Does this still need to be called here? 
+            Update();
             
             _rootView.GetLocationOnScreen(_rootViewLocation);
             _blurView.GetLocationOnScreen(_blurViewLocation);
@@ -230,24 +230,21 @@ namespace BlurView.Droid
             var left = _blurViewLocation[0] - _rootViewLocation[0];
             var top = _blurViewLocation[1] - _rootViewLocation[1];
             
-            // _internalBitmap = Render(RootView);
-
+            var croppedBitmap = new global::Android.Graphics.Rect(left, top, left + _blurView.Width, top + _blurView.Height);
             var blurViewRect = new global::Android.Graphics.Rect(0, 0, _blurView.Width, _blurView.Height);
             
-            canvas.Save();
-            //canvas.DrawBitmap(Blur(_internalBitmap),
             
-            // canvas.DrawBitmap(Blur(_internalBitmap),
-            //     src: new global::Android.Graphics.Rect(_blurViewLocation[0], _blurViewLocation[1], _blurViewLocation[0] + _blurView.Width, _blurViewLocation[1] + _blurView.Height),
-            //     dst: blurViewRect,
-            //     paint: new Paint(PaintFlags.FilterBitmap));
+            // Make the background opaque.
+            // 
+            canvas.DrawRect(blurViewRect, new Paint { Color = Color.White });
             
-            canvas.DrawBitmap(Blur(_internalBitmap), 0, 0, new Paint(PaintFlags.FilterBitmap));
+            canvas.DrawBitmap(Blur(_internalBitmap),
+                src: croppedBitmap,
+                dst: blurViewRect,
+                paint: new Paint(PaintFlags.FilterBitmap));
             
             canvas.DrawRect(blurViewRect, new Paint { Color = BackgroundColor });
-            canvas.Restore();
-
-
+            
             return true;
         }
         

@@ -32,7 +32,6 @@
                             PaintSurface="SKCanvasView_OnPaintSurface"/>
         
         <local:BlurView Grid.Column="0"
-                        BackgroundColor="#73740000"
                         BlurRadius="25"
                         
                         

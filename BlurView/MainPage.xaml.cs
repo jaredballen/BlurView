@@ -23,9 +23,9 @@ namespace BlurView
             canvas.Clear();
             canvas.DrawCircle(center, radius, new SKPaint()
             {
-                IsAntialias = true,
+                IsAntialias = false,
                 Style = SKPaintStyle.StrokeAndFill,
-                Color = SKColors.Red,
+                Color = SKColors.Blue,
             });
         }
     }

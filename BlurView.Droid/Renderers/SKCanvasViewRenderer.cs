@@ -1,9 +1,10 @@
+using System.ComponentModel;
 using Android.Content;
 using Android.Graphics;
 using BlurView;
 using BlurView.Droid.Renderers;
 using Xamarin.Forms;
-using Rect = Android.Graphics.Rect;
+using Xamarin.Forms.Platform.Android;
 using View = Android.Views.View;
 
 [assembly: ExportRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer))]
@@ -11,45 +12,23 @@ namespace BlurView.Droid.Renderers
 {
     public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRenderer
     {
-        public SKCanvasViewRenderer(Context context) : base(context)
-        {
-            ClipToOutline = false;
-        }
+        public SKCanvasViewRenderer(Context context) : base(context) { }
 
-        public override void Draw(Canvas canvas)
+        protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.Draw(canvas);
+            base.OnElementPropertyChanged(sender, e);
         }
 
         protected override bool DrawChild(Canvas? canvas, View? child, long drawingTime)
         {
             if (canvas is BlurViewCanvas blurViewCanvas && child is not null)
             {
-                var blurViewCanvasLocation = new int[2];
-                blurViewCanvas.GetLocationOnScreen(blurViewCanvasLocation);
+                using var vBitmap = Bitmap.CreateBitmap(child.Width, child.Height, Bitmap.Config.Argb8888);
+                using var vCanvas = new Canvas(vBitmap);
+                
+                var baseResult = base.DrawChild(vCanvas, child, drawingTime);
 
-                var childLocation = new int[2];
-                child.GetLocationOnScreen(childLocation);
-
-                var sx = (float)child.Width / canvas.Width;
-                var sy = (float)child.Height / canvas.Height;
-                
-                var dx = (childLocation[0] - blurViewCanvasLocation[0]) * sx;
-                var dy = (childLocation[1] - blurViewCanvasLocation[1]) * sy;
-                
-                canvas.Save();
-
-                //canvas.ClipBounds = new Rect(0, 0, canvas.Width, canvas.Height);
-                
-                canvas.Matrix = new Matrix(Matrix.IdentityMatrix);
-                canvas.Density = 0;
-                                
-                canvas.Scale(sx, sy);
-                //canvas.Translate(dx, dy);
-                
-                var baseResult = base.DrawChild(canvas, child, drawingTime);
-                
-                canvas.Restore();
+                canvas.DrawBitmap(vBitmap, 0, 0, null);
 
                 return baseResult;
             }
