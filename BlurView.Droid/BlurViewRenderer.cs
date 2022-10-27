@@ -293,7 +293,7 @@ namespace BlurView.Droid
 
                  return bitmap;
              }
-             catch (Exception)
+             catch (Exception e)
              {
                  return null;
              }

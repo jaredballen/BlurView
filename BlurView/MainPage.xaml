@@ -32,8 +32,10 @@
                             PaintSurface="SKCanvasView_OnPaintSurface"/>
         
         <local:BlurView Grid.Column="0"
+                        BackgroundColor="#73740000"
                         BlurRadius="25"
-                        
+                        VerticalOptions="Center"
+                        HeightRequest="200"
                         
                         RootView="{x:Reference RootView}" />
     </Grid>
