@@ -35,9 +35,22 @@
                         BackgroundColor="#73740000"
                         BlurRadius="25"
                         VerticalOptions="Center"
-                        HeightRequest="200"
-                        
-                        RootView="{x:Reference RootView}" />
+                        HeightRequest="200" />
+        
+        <local:BlurView Grid.Column="0"
+                        BackgroundColor="#73007300"
+                        BlurRadius="25"
+                        HorizontalOptions="End"
+                        VerticalOptions="Center"
+                        WidthRequest="75"
+                        HeightRequest="74">
+            <BoxView BackgroundColor="Yellow"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Center"
+                     WidthRequest="10"
+                     HeightRequest="10" />
+        </local:BlurView>
+        
     </Grid>
 
 </ContentPage>
