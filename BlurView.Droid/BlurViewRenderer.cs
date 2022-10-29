@@ -1,7 +1,8 @@
+#nullable enable
+
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Android.Content;
 using Android.Graphics;
 using Android.Renderscripts;
@@ -11,7 +12,6 @@ using BlurView.Droid;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using Color = Android.Graphics.Color;
-using Element = Xamarin.Forms.Element;
 using Rect = Android.Graphics.Rect;
 using View = Android.Views.View;
 
@@ -109,18 +109,24 @@ namespace BlurView.Droid
     {
         private readonly BlurViewRenderer _blurView;
         private readonly View _rootView;
-
-        private bool _drawing = false;
         
-        private readonly int[] _rootViewLocation = new int[] { -1, -1 };
+        private readonly int[] _rootViewLocation = { -1, -1 };
         private readonly int[] _blurViewLocation = new int[2];
         
         private int _rootViewWidth;
         private int _rootViewHeight;
+        private readonly RenderScript _renderScript;
+        private readonly ScriptIntrinsicBlur _blur;
         
         private Bitmap? _internalBitmap;
+        private Bitmap? _internalBlurredBitmap;
         private Canvas? _internalCanvas;
+
+        private Allocation? _internalAllocation;
+        private Allocation? _internalBlurredAllocation;
         
+        private bool _isDrawing;
+
         private Color _backgroundColor;
         public Color BackgroundColor
         {
@@ -149,58 +155,50 @@ namespace BlurView.Droid
         {
             _blurView = blurView;
             _rootView = rootView;
+            
+            _renderScript = RenderScript.Create(_blurView.Context);
+            _blur = ScriptIntrinsicBlur.Create(_renderScript, Android.Renderscripts.Element.U8_4(_renderScript));
         }
         
         internal void OnPreDraw()
         {
-            if (!_blurView.IsDirty)
-                _blurView.PostInvalidate();
-        }
-        
-        // if (_rootViewWidth != _rootView.Width || _rootViewHeight != _rootView.Height)
-        // {
-        //     try { _internalCanvas?.Dispose(); } catch { /* do nothing */ }
-        //         
-        //     _internalBitmap?.Recycle();
-        //     try { _internalBitmap?.Dispose(); } catch { /* do nothing */ }
-        //      
-        //     _rootViewWidth = _rootView.Width;
-        //     _rootViewHeight = _rootView.Height;
-        //         
-        //     _internalBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
-        //     _internalCanvas = new AcrylicCanvas(_blurView, _internalBitmap)
-        //     {
-        //         Density = 0
-        //     };
-        // }
-        //     
-        // _rootView.Draw(_internalCanvas);
-
-        private Bitmap? DrawIt()
-        {
-            if (_rootView.Width > 0 && _rootView.Height > 0)
+            if (_rootView.Width <= 0 || _rootView.Height <= 0) return;
+            
+            if (_rootView.Width != _rootViewWidth  || _rootView.Height != _rootViewHeight)
             {
-                var bitmap = Bitmap.CreateBitmap(_rootView.Width, _rootView.Height, Bitmap.Config.Argb8888);
-                using var canvas = new AcrylicCanvas(_blurView, bitmap)
+                try { _internalCanvas?.Dispose(); } catch { /* do nothing */ }
+                    
+                _internalBitmap?.Recycle();
+                try { _internalBitmap?.Dispose(); } catch { /* do nothing */ }
+                
+                _internalBlurredBitmap?.Recycle();
+                try { _internalBlurredBitmap?.Dispose(); } catch { /* do nothing */ }
+                
+                _rootViewWidth = _rootView.Width;
+                _rootViewHeight = _rootView.Height;
+                    
+                _internalBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
+                _internalBlurredBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
+                _internalCanvas = new AcrylicCanvas(_internalBitmap)
                 {
                     Density = 0
                 };
                 
-                _rootView.Draw(canvas);
-
-                return bitmap;
+                _internalAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBitmap);
+                _internalBlurredAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBlurredBitmap);
             }
             
-            return null;
+            if (!_blurView.IsDirty)
+                _blurView.PostInvalidate();
         }
         
         internal bool Draw(Canvas canvas)
         {
-            if (_drawing || (canvas is AcrylicCanvas acrylicCanvas && ReferenceEquals(acrylicCanvas.Parent, _blurView))) return false;
+            if (_isDrawing || _internalCanvas is null || ReferenceEquals(canvas, _internalCanvas)) return false;
 
             try
             {
-                _drawing = true;
+                _isDrawing = true;
                 
                 _rootView.GetLocationOnScreen(_rootViewLocation);
                 _blurView.GetLocationOnScreen(_blurViewLocation);
@@ -239,15 +237,22 @@ namespace BlurView.Droid
                 // // Draw main object 
                 // canvas.drawRect(20, 20, 100, 100, paint);
 
-                using var bitmap = DrawIt();
-                using var blurred = Blur(bitmap);
+                // using var bitmap = DrawIt();
+                // using var blurred = Blur(bitmap);
+                //
+                // if (blurred is null)
+                // {
+                //     return false;
+                // }
 
-                if (blurred is null)
-                {
-                    return false;
-                }
-
-                canvas.DrawBitmap(blurred,
+                _rootView.Draw(_internalCanvas);
+                
+                _blur.SetRadius(BlurRadius);
+                _blur.ForEach(_internalBlurredAllocation);
+                _blur.SetInput(_internalAllocation);
+                _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
+                
+                canvas.DrawBitmap(_internalBlurredBitmap,
                     src: croppedBitmap,
                     dst: blurViewRect,
                     paint: new Paint(PaintFlags.FilterBitmap));
@@ -258,27 +263,10 @@ namespace BlurView.Droid
             }
             finally
             {
-                _drawing = false;
+                _isDrawing = false;
             }
         }
         
-        private Bitmap? Blur(Bitmap? image) {
-            if (image is null) return null;
-            //return image;
-            var outputBitmap = Bitmap.CreateBitmap(image);
-            var renderScript = RenderScript.Create(_blurView.Context);
-            Allocation tmpIn = Allocation.CreateFromBitmap(renderScript, image);
-            Allocation tmpOut = Allocation.CreateFromBitmap(renderScript, outputBitmap);
-            
-            //Intrinsic Gausian blur filter
-            ScriptIntrinsicBlur theIntrinsic = ScriptIntrinsicBlur.Create(renderScript, global::Android.Renderscripts.Element.U8_4(renderScript));
-            theIntrinsic.SetRadius(BlurRadius);
-            theIntrinsic.SetInput(tmpIn);
-            theIntrinsic.ForEach(tmpOut);
-            tmpOut.CopyTo(outputBitmap);
-            return outputBitmap;
-        }
-
         #region IDisposable
         protected virtual void Dispose(bool disposing)
          {
@@ -290,6 +278,16 @@ namespace BlurView.Droid
              _internalBitmap?.Recycle();
              try { _internalBitmap?.Dispose(); } catch { /* do nothing */ }
              _internalBitmap = null;
+             
+             _internalBlurredBitmap?.Recycle();
+             try { _internalBlurredBitmap?.Dispose(); } catch { /* do nothing */ }
+             _internalBlurredBitmap = null;
+             
+             try { _internalAllocation?.Dispose(); } catch { /* do nothing */ }
+             _internalAllocation = null;
+             
+             try { _internalBlurredAllocation?.Dispose(); } catch { /* do nothing */ }
+             _internalBlurredAllocation = null;
          }
 
          public void Dispose()
@@ -307,11 +305,6 @@ namespace BlurView.Droid
     
     internal class AcrylicCanvas : Canvas
     {
-        internal readonly View Parent;
-
-        internal AcrylicCanvas(View parent, Bitmap bitmap) : base(bitmap)
-        {
-            Parent = parent;
-        }
+        internal AcrylicCanvas(Bitmap bitmap) : base(bitmap) { }
     }
 }
