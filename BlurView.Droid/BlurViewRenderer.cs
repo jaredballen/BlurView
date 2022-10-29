@@ -236,15 +236,7 @@ namespace BlurView.Droid
                 //
                 // // Draw main object 
                 // canvas.drawRect(20, 20, 100, 100, paint);
-
-                // using var bitmap = DrawIt();
-                // using var blurred = Blur(bitmap);
-                //
-                // if (blurred is null)
-                // {
-                //     return false;
-                // }
-
+                
                 _rootView.Draw(_internalCanvas);
                 
                 _blur.SetRadius(BlurRadius);
