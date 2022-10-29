@@ -17,12 +17,11 @@
                FontAttributes="Bold"
                Text="BlurView Test" />
         
-        <!--<local:BlurView Grid.Column="0"
+        <local:BlurView Grid.Column="0"
                         BackgroundColor="#73007300"
                         BlurRadius="25"
                         VerticalOptions="Start"
-                        HeightRequest="50"
-                        RootView="{x:Reference RootView}" />-->
+                        HeightRequest="50" />
         
         <local:SKCanvasView Grid.ColumnSpan="2"
                             HorizontalOptions="Center"
@@ -38,12 +37,13 @@
                         HeightRequest="200" />
         
         <local:BlurView Grid.Column="0"
+                        Grid.ColumnSpan="2"
                         BackgroundColor="#73007300"
                         BlurRadius="25"
-                        HorizontalOptions="End"
+                        HorizontalOptions="Center"
                         VerticalOptions="Center"
                         WidthRequest="75"
-                        HeightRequest="74">
+                        HeightRequest="250">
             <BoxView BackgroundColor="Yellow"
                      HorizontalOptions="Center"
                      VerticalOptions="Center"

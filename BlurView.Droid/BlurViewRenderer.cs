@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Android.Content;
 using Android.Graphics;
 using Android.Renderscripts;
+using Android.Runtime;
 using Android.Views;
 using BlurView.Droid;
 using Xamarin.Forms;
@@ -21,17 +22,13 @@ namespace BlurView.Droid
     {
         private BlurController? _blurController;
 
-        private static int _instance;
-        public int Instance { get; }
-
         private Color BackgroundColor => ((Element as BlurView)?.BackgroundColor ?? BlurView.DefaultBackgroundColor).ToAndroid();
         
         private float BlurRadius => (float)((Element as BlurView)?.BlurRadius ?? BlurView.DefaultBlurRadius);
 
-        public BlurViewRenderer(Context context) : base(context)
-        {
-            Instance = _instance++;
-        }
+        public BlurViewRenderer(IntPtr javaReference, JniHandleOwnership transfer) : base(Xamarin.Essentials.Platform.AppContext) { }
+
+        public BlurViewRenderer(Context context) : base(context) { }
         
         public bool OnPreDraw()
         {
@@ -113,6 +110,8 @@ namespace BlurView.Droid
         private readonly BlurViewRenderer _blurView;
         private readonly View _rootView;
 
+        private bool _drawing = false;
+        
         private readonly int[] _rootViewLocation = new int[] { -1, -1 };
         private readonly int[] _blurViewLocation = new int[2];
         
@@ -194,15 +193,15 @@ namespace BlurView.Droid
             
             return null;
         }
-
-        private bool drawing = false;
+        
         internal bool Draw(Canvas canvas)
         {
-            if (drawing || (canvas is AcrylicCanvas acrylicCanvas && (acrylicCanvas.Parent.Instance == _blurView.Instance))) return false;
+            if (_drawing || (canvas is AcrylicCanvas acrylicCanvas && ReferenceEquals(acrylicCanvas.Parent, _blurView))) return false;
 
             try
             {
-                drawing = true;
+                _drawing = true;
+                
                 _rootView.GetLocationOnScreen(_rootViewLocation);
                 _blurView.GetLocationOnScreen(_blurViewLocation);
             
@@ -215,9 +214,7 @@ namespace BlurView.Droid
                 // Make the background opaque.
                 // 
                 canvas.DrawRect(blurViewRect, new Paint { Color = Color.White });
-
-
-
+                
                 // //Make it frosty
                 // Paint paint = new Paint();
                 // paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
@@ -261,7 +258,7 @@ namespace BlurView.Droid
             }
             finally
             {
-                drawing = false;
+                _drawing = false;
             }
         }
         
@@ -310,9 +307,9 @@ namespace BlurView.Droid
     
     internal class AcrylicCanvas : Canvas
     {
-        internal readonly BlurViewRenderer Parent;
+        internal readonly View Parent;
 
-        internal AcrylicCanvas(BlurViewRenderer parent, Bitmap bitmap) : base(bitmap)
+        internal AcrylicCanvas(View parent, Bitmap bitmap) : base(bitmap)
         {
             Parent = parent;
         }
