@@ -13,6 +13,7 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using Color = Android.Graphics.Color;
 using Rect = Android.Graphics.Rect;
+using Region = Android.Graphics.Region;
 using View = Android.Views.View;
 
 [assembly: ExportRenderer(typeof(BlurView.BlurView), typeof(BlurViewRenderer))]
@@ -199,20 +200,56 @@ namespace BlurView.Droid
             try
             {
                 _isDrawing = true;
-                
+
                 _rootView.GetLocationOnScreen(_rootViewLocation);
                 _blurView.GetLocationOnScreen(_blurViewLocation);
-            
+
                 var left = _blurViewLocation[0] - _rootViewLocation[0];
                 var top = _blurViewLocation[1] - _rootViewLocation[1];
 
                 var croppedBitmap = new Rect(left, top, left + _blurView.Width, top + _blurView.Height);
                 var blurViewRect = new Rect(0, 0, _blurView.Width, _blurView.Height);
 
+
+                var _ul = 100;
+                var _ur = 100;
+                var _lr = 100;
+                var _ll = 100;
+
+
+                var width = blurViewRect.Width();
+                var height = blurViewRect.Height();
+                var path = new Path();
+
+                // Create "rounded rect" path moving clock-wise starting at the top-left corner.
+                //
+                var (r0, r1) = GetNormalizedRadius(_ul, _ur, width);
+                var first = r0;
+                path.MoveTo(r0, 0);
+                path.LineTo(width - r1, 0);
+
+                (r0, r1) = GetNormalizedRadius(_ur, _lr, height);
+                path.QuadTo(width, 0, width, r0);
+                path.LineTo(width, height - r1);
+
+                (r0, r1) = GetNormalizedRadius(_lr, _ll, width);
+                path.QuadTo(width, height, width - r0, height);
+                path.LineTo(r1, height);
+
+                (r0, r1) = GetNormalizedRadius(_ll, _ul, height);
+                path.QuadTo(0, height, 0, height - r0);
+                path.LineTo(0, r1);
+
+                path.QuadTo(0, 0, first, 0);
+
+
+                canvas.Save();
+                canvas.ClipPath(path, Region.Op.Intersect);
+
                 // Make the background opaque.
                 // 
                 canvas.DrawRect(blurViewRect, new Paint { Color = Color.White });
-                
+
                 // //Make it frosty
                 // Paint paint = new Paint();
                 // paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
@@ -236,14 +273,14 @@ namespace BlurView.Droid
                 //
                 // // Draw main object 
                 // canvas.drawRect(20, 20, 100, 100, paint);
-                
+
                 _rootView.Draw(_internalCanvas);
-                
+
                 _blur.SetRadius(BlurRadius);
                 _blur.ForEach(_internalBlurredAllocation);
                 _blur.SetInput(_internalAllocation);
                 _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
-                
+
                 canvas.DrawBitmap(_internalBlurredBitmap,
                     src: croppedBitmap,
                     dst: blurViewRect,
@@ -251,12 +288,32 @@ namespace BlurView.Droid
 
                 canvas.DrawRect(blurViewRect, new Paint { Color = BackgroundColor });
 
+                canvas.Restore();
+
                 return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine();
             }
             finally
             {
                 _isDrawing = false;
             }
+
+            return true;
+        }
+
+        private (int r0, int r1) GetNormalizedRadius(int r0, int r1, int length)
+        {
+            if (r0 + r1 > length)
+            {
+                var total = (float)(r0 + r1);
+                r0 = (int)(length * (r0 / total));
+                r1 = (int)(length * (r1 / total));
+            }
+
+            return (r0, r1);
         }
         
         #region IDisposable
