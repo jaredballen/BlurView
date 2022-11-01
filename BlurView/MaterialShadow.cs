@@ -6,13 +6,13 @@ public class MaterialShadow
 {
     private static readonly double[] _elevation = { 1, 2, 3, 4, 6, 8, 9, 12, 16, 24 };
     
-    private static readonly double _opacityPenumbra = 12;
+    private static readonly double _opacityPenumbra = 0.26;
     private static readonly double _dxPenumbra = 0;
     private static readonly double[] _dyPenumbra = { 2, 3, 4, 4, 1, 3, 3, 5, 6, 9 };
     private static readonly double[] _radiusPenumbra = { 2, 4, 5, 5, 18, 16, 16, 22, 30, 46 };
     private static readonly double[] _spreadPenumbra = { 0, 0, 0, 0, 0, 2, 2, 4, 5, 8 };
 
-    private static (double opacity, double dx, double dy, double radius, double spread) GetPenumbra(double elevation)
+    public static (double opacity, double dx, double dy, double radius, double spread) GetPenumbra(double elevation)
     {
         var index = Array.BinarySearch(_elevation, elevation);
         
@@ -29,13 +29,13 @@ public class MaterialShadow
         return (_opacityPenumbra, _dxPenumbra, dy, radius, spread);
     }
     
-    private static readonly double _opacityAmbient = 20;
+    private static readonly double _opacityAmbient = 0.08;
     private static readonly double _dxAmbient = 0;
     private static readonly double[] _dyAmbient = { 1, 1, 1, 1, 3, 4, 5, 7, 8, 11 };
     private static readonly double[] _radiusAmbient = { 3, 5, 8, 10, 5, 15, 6, 8, 10, 15 };
     private static readonly double _spreadAmbient = 0;
     
-    private static (double opacity, double dx, double dy, double radius, double spread) GetAmbient(double elevation)
+    public static (double opacity, double dx, double dy, double radius, double spread) GetAmbient(double elevation)
     {
         var index = Array.BinarySearch(_elevation, elevation);
         

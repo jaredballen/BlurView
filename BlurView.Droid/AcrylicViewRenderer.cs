@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Xml;
 using Android.Content;
 using Android.Graphics;
 using Android.Renderscripts;
@@ -16,20 +17,22 @@ using Rect = Android.Graphics.Rect;
 using Region = Android.Graphics.Region;
 using View = Android.Views.View;
 
-[assembly: ExportRenderer(typeof(BlurView.BlurView), typeof(BlurViewRenderer))]
+[assembly: ExportRenderer(typeof(BlurView.AcrylicView), typeof(AcrylicViewRenderer))]
 namespace BlurView.Droid
 {
-    public class BlurViewRenderer : ViewRenderer, ViewTreeObserver.IOnPreDrawListener
+    public class AcrylicViewRenderer : ViewRenderer, ViewTreeObserver.IOnPreDrawListener
     {
         private BlurController? _blurController;
 
-        private Color BackgroundColor => ((Element as BlurView)?.BackgroundColor ?? BlurView.DefaultBackgroundColor).ToAndroid();
+        private Color BackgroundColor => ((Element as AcrylicView)?.BackgroundColor ?? AcrylicView.DefaultBackgroundColor).ToAndroid();
         
-        private float BlurRadius => (float)((Element as BlurView)?.BlurRadius ?? BlurView.DefaultBlurRadius);
+        private float BlurRadius => (float)((Element as AcrylicView)?.BlurRadius ?? AcrylicView.DefaultBlurRadius);
+        
+        private float Elevation => (float)((Element as AcrylicView)?.Elevation ?? AcrylicView.DefaultElevation);
 
-        public BlurViewRenderer(IntPtr javaReference, JniHandleOwnership transfer) : base(Xamarin.Essentials.Platform.AppContext) { }
+        public AcrylicViewRenderer(IntPtr javaReference, JniHandleOwnership transfer) : base(Xamarin.Essentials.Platform.AppContext) { }
 
-        public BlurViewRenderer(Context context) : base(context) { }
+        public AcrylicViewRenderer(Context context) : base(context) { }
         
         public bool OnPreDraw()
         {
@@ -65,7 +68,8 @@ namespace BlurView.Droid
             _blurController = new BlurController(this, currentPage?.GetRenderer()?.View)
             {
                 BackgroundColor = BackgroundColor,
-                BlurRadius = BlurRadius
+                BlurRadius = BlurRadius,
+                Elevation = Elevation,
             };
             
             ViewTreeObserver.AddOnPreDrawListener(this);
@@ -80,31 +84,25 @@ namespace BlurView.Droid
             try { _blurController?.Dispose(); } catch { /* do nothing */ }
             _blurController = null;
         }
-
-        protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
-        {
-            base.OnSizeChanged(w, h, oldw, oldh);
-            
-            //// this.path = new Path();
-            //// this.path.addRoundRect(new RectF(0, 0, width, height), cornerRadius, cornerRadius, Path.Direction.CW);
-        }
         
         protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnElementPropertyChanged(sender, e);
 
-            if (string.Equals(e.PropertyName, BlurView.BackgroundColorProperty.PropertyName) ||
-                string.Equals(e.PropertyName, BlurView.BlurRadiusProperty.PropertyName))
+            if (string.Equals(e.PropertyName, AcrylicView.BackgroundColorProperty.PropertyName) ||
+                string.Equals(e.PropertyName, AcrylicView.BlurRadiusProperty.PropertyName) ||
+                string.Equals(e.PropertyName, AcrylicView.ElevationProperty.PropertyName))
             {
                 _blurController.BackgroundColor = BackgroundColor;
                 _blurController.BlurRadius = BlurRadius;
+                _blurController.Elevation = Elevation;
             }
         }
     }
 
     internal class BlurController : IDisposable
     {
-        private readonly BlurViewRenderer _blurView;
+        private readonly AcrylicViewRenderer _acrylicView;
         private readonly View _rootView;
         
         private readonly int[] _rootViewLocation = { -1, -1 };
@@ -133,7 +131,7 @@ namespace BlurView.Droid
             {
                 if (_backgroundColor == value) return;
                 _backgroundColor = value;
-                _blurView.PostInvalidate();
+                _acrylicView.PostInvalidate();
             }
         }
 
@@ -145,16 +143,28 @@ namespace BlurView.Droid
             {
                 if (_blurRadius == value) return;
                 _blurRadius = value;
-                _blurView.PostInvalidate();
+                _acrylicView.PostInvalidate();
+            }
+        }
+        
+        private float _elevation;
+        public float Elevation
+        {
+            get => _elevation;
+            set
+            {
+                if (_elevation == value) return;
+                _elevation = value;
+                _acrylicView.PostInvalidate();
             }
         }
 
-        public BlurController(BlurViewRenderer blurView, View rootView) : base()
+        public BlurController(AcrylicViewRenderer acrylicView, View rootView) : base()
         {
-            _blurView = blurView;
+            _acrylicView = acrylicView;
             _rootView = rootView;
             
-            _renderScript = RenderScript.Create(_blurView.Context);
+            _renderScript = RenderScript.Create(_acrylicView.Context);
             _blur = ScriptIntrinsicBlur.Create(_renderScript, Android.Renderscripts.Element.U8_4(_renderScript));
         }
         
@@ -189,8 +199,8 @@ namespace BlurView.Droid
                 _internalBlurredAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBlurredBitmap);
             }
             
-            if (!_blurView.IsDirty)
-                _blurView.PostInvalidate();
+            if (!_acrylicView.IsDirty)
+                _acrylicView.PostInvalidate();
         }
         
         internal bool Draw(Canvas canvas)
@@ -202,26 +212,23 @@ namespace BlurView.Droid
                 _isDrawing = true;
 
                 _rootView.GetLocationOnScreen(_rootViewLocation);
-                _blurView.GetLocationOnScreen(_blurViewLocation);
+                _acrylicView.GetLocationOnScreen(_blurViewLocation);
 
                 var left = _blurViewLocation[0] - _rootViewLocation[0];
                 var top = _blurViewLocation[1] - _rootViewLocation[1];
 
-                var croppedBitmap = new Rect(left, top, left + _blurView.Width, top + _blurView.Height);
-                var blurViewRect = new Rect(0, 0, _blurView.Width, _blurView.Height);
+                var croppedBitmap = new Rect(left, top, left + _acrylicView.Width, top + _acrylicView.Height);
+                var blurViewRect = new Rect(0, 0, _acrylicView.Width, _acrylicView.Height);
 
                 
-                var _ul = 100;
-                var _ur = 100;
-                var _lr = 100;
-                var _ll = 100;
-
-                var blurRadius = 20;
-                var blurDx = 10;
-                var blurDy = 10;
-
                 var width = blurViewRect.Width();
                 var height = blurViewRect.Height();
+                
+                var temp = (int)DpToPixel(16);
+                var _ul = temp;
+                var _ur = temp;
+                var _lr = temp;
+                var _ll = temp;
                 
                 _viewPath.Reset();
                 // Create "rounded rect" path moving clock-wise starting at the top-left corner.
@@ -248,30 +255,38 @@ namespace BlurView.Droid
                 canvas.Save();
                 
                 
-                if (true) // disable shadow for now.
+                if (true) // Penumbra
                 {
-                    // BEGIN SHADOW
-                    canvas.Save();
+                    using var shadowPath = new Path(_viewPath);
+                    
+                    var (opacity, dx, dy, radius, spread) = MaterialShadow.GetPenumbra(Elevation);
 
-                    var shadowPaint = new Paint();
-                    shadowPaint.Reset();
+                    opacity = (255 * opacity);
+                    dx = DpToPixel(dx);
+                    dy = DpToPixel(dy);
+                    radius = DpToPixel(radius);
+                    spread = DpToPixel(spread);
+
+                    // scale up to accommodate the spread
+                    // 
+                    var sx = (float)((width + spread) / width);
+                    var sy = (float)((height + spread) / height);
+                    using var scaleMatrix = new Matrix();
+                    scaleMatrix.SetScale(sx, sy, width / 2, height / 2);
+                    shadowPath.Transform(scaleMatrix);
+                    
+                    using var shadowPaint = new Paint();
                     shadowPaint.AntiAlias = true;
-                    shadowPaint.SetShadowLayer(blurRadius, blurDx, blurDy, Color.Black);
-                    canvas.ClipOutPath(_viewPath);
-                    canvas.DrawPath(_viewPath, shadowPaint);
-                    canvas.Restore();
+                    shadowPaint.Color = Color.Transparent;
+
+                    shadowPaint.SetShadowLayer((float)radius, (float)dx, (float)dy, ColorWithAlpha(Color.Black, (int)opacity));
+                    canvas.DrawPath(shadowPath, shadowPaint);
                     // END SHADOW
                 }
                 
                 
                 
                 canvas.ClipPath(_viewPath, Region.Op.Intersect);
-
-                // Make the background opaque.
-                // 
-                canvas.DrawRect(blurViewRect, new Paint { Color = Color.White });
-
-                
                 
                 
                 // //Make it frosty
@@ -280,24 +295,23 @@ namespace BlurView.Droid
                 // ColorFilter filter = new LightingColorFilter(0xFFFFFFFF, 0x00222222); // lighten
                 // //ColorFilter filter = new LightingColorFilter(0xFF7F7F7F, 0x00000000);    // darken
                 // paint.setColorFilter(filter);
-
                 
                 
-
+                
                 _rootView.Draw(_internalCanvas);
-
+                
                 _blur.SetRadius(BlurRadius);
                 _blur.ForEach(_internalBlurredAllocation);
                 _blur.SetInput(_internalAllocation);
                 _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
-
+                
                 canvas.DrawBitmap(_internalBlurredBitmap,
                     src: croppedBitmap,
                     dst: blurViewRect,
                     paint: new Paint(PaintFlags.FilterBitmap));
-
+                
                 canvas.DrawRect(blurViewRect, new Paint { Color = BackgroundColor });
-
+                
                 canvas.Restore();
 
                 return true;
@@ -325,6 +339,10 @@ namespace BlurView.Droid
 
             return (r0, r1);
         }
+
+        private double DpToPixel(double dp) => DpToPixel((float)dp);
+        private float DpToPixel(float dp) => dp * _acrylicView.Context.Resources.DisplayMetrics.Density;
+        private static Color ColorWithAlpha(Color color, int alpha) => new Color(color.R, color.G, color.B, alpha);
         
         #region IDisposable
         protected virtual void Dispose(bool disposing)
