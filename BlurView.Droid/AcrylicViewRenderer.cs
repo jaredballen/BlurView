@@ -10,6 +10,7 @@ using Android.Renderscripts;
 using Android.Runtime;
 using Android.Views;
 using BlurView.Droid;
+using Java.Util.Functions;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using Color = Android.Graphics.Color;
@@ -216,13 +217,14 @@ namespace BlurView.Droid
 
                 var left = _blurViewLocation[0] - _rootViewLocation[0];
                 var top = _blurViewLocation[1] - _rootViewLocation[1];
-
-                var croppedBitmap = new Rect(left, top, left + _acrylicView.Width, top + _acrylicView.Height);
-                var blurViewRect = new Rect(0, 0, _acrylicView.Width, _acrylicView.Height);
+                var width = _acrylicView.Width;
+                var height = _acrylicView.Height;
+                
+                var offsetViewRect = new Rect(left, top, left + width, top + height);
+                var viewRect = new Rect(0, 0, width, height);
 
                 
-                var width = blurViewRect.Width();
-                var height = blurViewRect.Height();
+                
                 
                 var temp = (int)DpToPixel(16);
                 var _ul = temp;
@@ -231,6 +233,7 @@ namespace BlurView.Droid
                 var _ll = temp;
                 
                 _viewPath.Reset();
+                
                 // Create "rounded rect" path moving clock-wise starting at the top-left corner.
                 //
                 var (r0, r1) = GetNormalizedRadius(_ul, _ur, width);
@@ -252,51 +255,20 @@ namespace BlurView.Droid
 
                 _viewPath.QuadTo(0, 0, first, 0);
 
+                
+                
                 canvas.Save();
-                
-                
-                if (true) // Penumbra
+
+                if (Elevation > 0)
                 {
-                    using var shadowPath = new Path(_viewPath);
-                    
-                    var (opacity, dx, dy, radius, spread) = MaterialShadow.GetPenumbra(Elevation);
+                    var (alpha, dx, dy, radius, spread) = MaterialShadow.GetPenumbra(Elevation);
+                    DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
 
-                    opacity = (255 * opacity);
-                    dx = DpToPixel(dx);
-                    dy = DpToPixel(dy);
-                    radius = DpToPixel(radius);
-                    spread = DpToPixel(spread);
-
-                    // scale up to accommodate the spread
-                    // 
-                    var sx = (float)((width + spread) / width);
-                    var sy = (float)((height + spread) / height);
-                    using var scaleMatrix = new Matrix();
-                    scaleMatrix.SetScale(sx, sy, width / 2, height / 2);
-                    shadowPath.Transform(scaleMatrix);
-                    
-                    using var shadowPaint = new Paint();
-                    shadowPaint.AntiAlias = true;
-                    shadowPaint.Color = Color.Transparent;
-
-                    shadowPaint.SetShadowLayer((float)radius, (float)dx, (float)dy, ColorWithAlpha(Color.Black, (int)opacity));
-                    canvas.DrawPath(shadowPath, shadowPaint);
-                    // END SHADOW
+                    (alpha, dx, dy, radius, spread) = MaterialShadow.GetAmbient(Elevation);
+                    DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
                 }
-                
-                
-                
+
                 canvas.ClipPath(_viewPath, Region.Op.Intersect);
-                
-                
-                // //Make it frosty
-                // Paint paint = new Paint();
-                // paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-                // ColorFilter filter = new LightingColorFilter(0xFFFFFFFF, 0x00222222); // lighten
-                // //ColorFilter filter = new LightingColorFilter(0xFF7F7F7F, 0x00000000);    // darken
-                // paint.setColorFilter(filter);
-                
-                
                 
                 _rootView.Draw(_internalCanvas);
                 
@@ -305,12 +277,23 @@ namespace BlurView.Droid
                 _blur.SetInput(_internalAllocation);
                 _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
                 
-                canvas.DrawBitmap(_internalBlurredBitmap,
-                    src: croppedBitmap,
-                    dst: blurViewRect,
-                    paint: new Paint(PaintFlags.FilterBitmap));
                 
-                canvas.DrawRect(blurViewRect, new Paint { Color = BackgroundColor });
+                // TODO: Tie this into new enum like iOS for light/dark and blur radius
+                using var acrylicPaint = new Paint(PaintFlags.FilterBitmap);
+                acrylicPaint.SetXfermode(new PorterDuffXfermode(PorterDuff.Mode.SrcIn));
+                // Lighten
+                //acrylicPaint.SetColorFilter(new LightingColorFilter(0x00FFFFFF, 0x00222222));
+
+                // Darken
+                acrylicPaint.SetColorFilter(new LightingColorFilter(0x00D7D7D7, 0x00000000));
+                
+                
+                canvas.DrawBitmap(_internalBlurredBitmap,
+                    src: offsetViewRect,
+                    dst: viewRect,
+                    paint: acrylicPaint);
+                
+                canvas.DrawRect(viewRect, new Paint { Color = BackgroundColor });
                 
                 canvas.Restore();
 
@@ -344,6 +327,31 @@ namespace BlurView.Droid
         private float DpToPixel(float dp) => dp * _acrylicView.Context.Resources.DisplayMetrics.Density;
         private static Color ColorWithAlpha(Color color, int alpha) => new Color(color.R, color.G, color.B, alpha);
         
+        private void DrawShadow(Canvas? canvas, float outlineWidth, float outlineHeight, Path outline, double alpha, double dx, double dy, double radius, double spread)
+        {
+            alpha = 255 * alpha;
+            dx = DpToPixel(dx);
+            dy = DpToPixel(dy);
+            radius = DpToPixel(radius);
+            spread = DpToPixel(spread);
+
+            using var path = new Path(outline);
+            if (spread > 0)
+            {
+                var sx = (float)((outlineWidth + spread) / outlineWidth);
+                var sy = (float)((outlineHeight + spread) / outlineHeight);
+                using var matrix = new Matrix();
+                matrix.SetScale(sx, sy, outlineWidth / 2, outlineHeight / 2);
+                path.Transform(matrix);
+            }
+            
+            using var paint = new Paint();
+            paint.AntiAlias = true;
+            paint.Color = Color.Transparent;
+            paint.SetShadowLayer((float)radius, (float)dx, (float)dy, ColorWithAlpha(Color.Black, (int)alpha));
+            canvas.DrawPath(path, paint);
+        }
+
         #region IDisposable
         protected virtual void Dispose(bool disposing)
          {
