@@ -1,14 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:forms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              xmlns:local="clr-namespace:BlurView"
+             xmlns:ffimage="clr-namespace:FFImageLoading.Svg.Forms;assembly=FFImageLoading.Svg.Forms"
              x:Class="BlurView.MainPage"
              x:Name="RootView">
 
     <Grid ColumnDefinitions="*, *"
           RowSpacing="0"
           ColumnSpacing="0">
+        
+        <ffimage:SvgCachedImage Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Aspect="AspectFill"
+                                Source="resource://BlurView.Resources.Images.background.svg" />
         
         <Label Grid.ColumnSpan="2"
                HorizontalOptions="Center"

@@ -44,10 +44,6 @@ namespace BlurView.Droid
                 ViewTreeObserver.RemoveOnPreDrawListener(this);
 
                 if (!(_blurController?.Draw(canvas) ?? false)) return;
-                
-                //if (this.path != null) {
-                //    canvas.clipPath(this.path);
-                //}
                 base.Draw(canvas);
                 SetBackgroundColor(Color.Transparent);
             }
@@ -122,6 +118,7 @@ namespace BlurView.Droid
         private Bitmap? _internalBitmap;
         private Bitmap? _internalBlurredBitmap;
         private Canvas? _internalCanvas;
+        private Path? _viewPath;
 
         private Allocation? _internalAllocation;
         private Allocation? _internalBlurredAllocation;
@@ -185,6 +182,9 @@ namespace BlurView.Droid
                     Density = 0
                 };
                 
+                try { _viewPath?.Dispose(); } catch { /* do nothing */ }
+                _viewPath = new Path();
+                
                 _internalAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBitmap);
                 _internalBlurredAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBlurredBitmap);
             }
@@ -210,46 +210,70 @@ namespace BlurView.Droid
                 var croppedBitmap = new Rect(left, top, left + _blurView.Width, top + _blurView.Height);
                 var blurViewRect = new Rect(0, 0, _blurView.Width, _blurView.Height);
 
-
+                
                 var _ul = 100;
                 var _ur = 100;
                 var _lr = 100;
                 var _ll = 100;
 
+                var blurRadius = 20;
+                var blurDx = 10;
+                var blurDy = 10;
 
                 var width = blurViewRect.Width();
                 var height = blurViewRect.Height();
-                var path = new Path();
-
+                
+                _viewPath.Reset();
                 // Create "rounded rect" path moving clock-wise starting at the top-left corner.
                 //
                 var (r0, r1) = GetNormalizedRadius(_ul, _ur, width);
                 var first = r0;
-                path.MoveTo(r0, 0);
-                path.LineTo(width - r1, 0);
+                _viewPath.MoveTo(r0, 0);
+                _viewPath.LineTo(width - r1, 0);
 
                 (r0, r1) = GetNormalizedRadius(_ur, _lr, height);
-                path.QuadTo(width, 0, width, r0);
-                path.LineTo(width, height - r1);
+                _viewPath.QuadTo(width, 0, width, r0);
+                _viewPath.LineTo(width, height - r1);
 
                 (r0, r1) = GetNormalizedRadius(_lr, _ll, width);
-                path.QuadTo(width, height, width - r0, height);
-                path.LineTo(r1, height);
+                _viewPath.QuadTo(width, height, width - r0, height);
+                _viewPath.LineTo(r1, height);
 
                 (r0, r1) = GetNormalizedRadius(_ll, _ul, height);
-                path.QuadTo(0, height, 0, height - r0);
-                path.LineTo(0, r1);
+                _viewPath.QuadTo(0, height, 0, height - r0);
+                _viewPath.LineTo(0, r1);
 
-                path.QuadTo(0, 0, first, 0);
-
+                _viewPath.QuadTo(0, 0, first, 0);
 
                 canvas.Save();
-                canvas.ClipPath(path, Region.Op.Intersect);
+                
+                
+                if (true) // disable shadow for now.
+                {
+                    // BEGIN SHADOW
+                    canvas.Save();
+
+                    var shadowPaint = new Paint();
+                    shadowPaint.Reset();
+                    shadowPaint.AntiAlias = true;
+                    shadowPaint.SetShadowLayer(blurRadius, blurDx, blurDy, Color.Black);
+                    canvas.ClipOutPath(_viewPath);
+                    canvas.DrawPath(_viewPath, shadowPaint);
+                    canvas.Restore();
+                    // END SHADOW
+                }
+                
+                
+                
+                canvas.ClipPath(_viewPath, Region.Op.Intersect);
 
                 // Make the background opaque.
                 // 
                 canvas.DrawRect(blurViewRect, new Paint { Color = Color.White });
 
+                
+                
+                
                 // //Make it frosty
                 // Paint paint = new Paint();
                 // paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
@@ -257,22 +281,8 @@ namespace BlurView.Droid
                 // //ColorFilter filter = new LightingColorFilter(0xFF7F7F7F, 0x00000000);    // darken
                 // paint.setColorFilter(filter);
 
-                // Shadow
-                // Create paint for shadow
-                // paint.setColor(shadowColor);
-                // paint.setMaskFilter(new BlurMaskFilter(
-                //     blurRadius /* shadowRadius */,
-                //     BlurMaskFilter.Blur.NORMAL));
-                //
-                // // Draw shadow before drawing object
-                // canvas.drawRect(20 + offsetX, 20 + offsetY, 100 + offsetX, 100 + offsetY, paint);
-                //
-                // // Create paint for main object
-                // paint.setColor(mainColor);
-                // paint.setMaskFilter(null);
-                //
-                // // Draw main object 
-                // canvas.drawRect(20, 20, 100, 100, paint);
+                
+                
 
                 _rootView.Draw(_internalCanvas);
 
@@ -331,6 +341,9 @@ namespace BlurView.Droid
              _internalBlurredBitmap?.Recycle();
              try { _internalBlurredBitmap?.Dispose(); } catch { /* do nothing */ }
              _internalBlurredBitmap = null;
+             
+             try { _viewPath?.Dispose(); } catch { /* do nothing */ }
+             _viewPath = new Path();
              
              try { _internalAllocation?.Dispose(); } catch { /* do nothing */ }
              _internalAllocation = null;
