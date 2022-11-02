@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using Android.Content;
 using Android.Graphics;
+using Android.Hardware;
 using Android.Renderscripts;
 using Android.Runtime;
 using Android.Views;
@@ -200,7 +201,8 @@ namespace BlurView.Droid
                 _rootViewHeight = _rootView.Height;
                     
                 _internalBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
-                _internalBlurredBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
+                //_internalBlurredBitmap = Bitmap.CreateBitmap(_rootViewWidth, _rootViewHeight, Bitmap.Config.Argb8888);
+                _internalBlurredBitmap = Bitmap.CreateBitmap((int)(_rootViewWidth * 0.25), (int)(_rootViewHeight * 0.25), Bitmap.Config.Argb8888);
                 _internalCanvas = new AcrylicCanvas(_internalBitmap)
                 {
                     Density = 0
@@ -233,7 +235,7 @@ namespace BlurView.Droid
                 var width = _acrylicView.Width;
                 var height = _acrylicView.Height;
                 
-                var offsetViewRect = new Rect(left, top, left + width, top + height);
+                var offsetViewRect = new Rect((int)(left * 0.25), (int)(top * 0.25), (int)((left + width) * 0.25), (int)((top + height) * 0.25));
                 var viewRect = new Rect(0, 0, width, height);
 
                 
@@ -286,9 +288,16 @@ namespace BlurView.Droid
                 
                 _rootView.Draw(_internalCanvas);
                 
+                
+                using var scaledBitmap = Bitmap.CreateScaledBitmap(_internalBitmap, (int)(_rootViewWidth * 0.25), (int)(_rootViewHeight * 0.25), true);
+                
                 _blur.SetRadius(BlurRadius);
                 _blur.ForEach(_internalBlurredAllocation);
-                _blur.SetInput(_internalAllocation);
+                
+                using var allocation = Allocation.CreateFromBitmap(_renderScript, scaledBitmap);
+                _blur.SetInput(allocation);
+                //_blur.SetInput(_internalAllocation);
+                
                 _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
                 
                 canvas.DrawBitmap(_internalBlurredBitmap,
