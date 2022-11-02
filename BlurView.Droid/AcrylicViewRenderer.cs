@@ -3,14 +3,12 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Xml;
 using Android.Content;
 using Android.Graphics;
 using Android.Renderscripts;
 using Android.Runtime;
 using Android.Views;
 using BlurView.Droid;
-using Java.Util.Functions;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using Color = Android.Graphics.Color;
@@ -39,6 +37,18 @@ namespace BlurView.Droid
         {
             _blurController?.OnPreDraw();
             return true;
+        }
+
+        protected override void OnElementChanged(ElementChangedEventArgs<Xamarin.Forms.View> e)
+        {
+            base.OnElementChanged(e);
+
+            if (_blurController is not null && Element is not null && Control is not null)
+            {
+                _blurController.BackgroundColor = BackgroundColor;
+                _blurController.BlurRadius = BlurRadius;
+                _blurController.Elevation = Elevation;
+            }
         }
 
         public override void Draw(Canvas canvas)
@@ -101,7 +111,7 @@ namespace BlurView.Droid
         }
     }
 
-    internal class BlurController : IDisposable
+    internal class BlurController : ViewOutlineProvider, IDisposable
     {
         private readonly AcrylicViewRenderer _acrylicView;
         private readonly View _rootView;
@@ -156,6 +166,7 @@ namespace BlurView.Droid
             {
                 if (_elevation == value) return;
                 _elevation = value;
+                _acrylicView.Elevation = DpToPixel(_elevation);
                 _acrylicView.PostInvalidate();
             }
         }
@@ -164,6 +175,8 @@ namespace BlurView.Droid
         {
             _acrylicView = acrylicView;
             _rootView = rootView;
+
+            _acrylicView.OutlineProvider = this;
             
             _renderScript = RenderScript.Create(_acrylicView.Context);
             _blur = ScriptIntrinsicBlur.Create(_renderScript, Android.Renderscripts.Element.U8_4(_renderScript));
@@ -254,19 +267,20 @@ namespace BlurView.Droid
                 _viewPath.LineTo(0, r1);
 
                 _viewPath.QuadTo(0, 0, first, 0);
-
-                
                 
                 canvas.Save();
 
-                if (Elevation > 0)
-                {
-                    var (alpha, dx, dy, radius, spread) = MaterialShadow.GetPenumbra(Elevation);
-                    DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
-
-                    (alpha, dx, dy, radius, spread) = MaterialShadow.GetAmbient(Elevation);
-                    DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
-                }
+                // This shadow support if too inefficient for Android. Instead we use ViewOutlineProvider
+                // to allow Android to render the shadow for us.
+                // 
+                // if (Elevation > 0)
+                // {
+                //     var (alpha, dx, dy, radius, spread) = MaterialShadow.GetPenumbra(Elevation);
+                //     DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
+                //
+                //     (alpha, dx, dy, radius, spread) = MaterialShadow.GetAmbient(Elevation);
+                //     DrawShadow(canvas, width, height, _viewPath, alpha, dx, dy, radius, spread);
+                // }
 
                 canvas.ClipPath(_viewPath, Region.Op.Intersect);
                 
@@ -277,23 +291,16 @@ namespace BlurView.Droid
                 _blur.SetInput(_internalAllocation);
                 _internalBlurredAllocation.CopyTo(_internalBlurredBitmap);
                 
-                
-                // TODO: Tie this into new enum like iOS for light/dark and blur radius
-                using var acrylicPaint = new Paint(PaintFlags.FilterBitmap);
-                acrylicPaint.SetXfermode(new PorterDuffXfermode(PorterDuff.Mode.SrcIn));
-                // Lighten
-                //acrylicPaint.SetColorFilter(new LightingColorFilter(0x00FFFFFF, 0x00222222));
-
-                // Darken
-                acrylicPaint.SetColorFilter(new LightingColorFilter(0x00D7D7D7, 0x00000000));
-                
-                
                 canvas.DrawBitmap(_internalBlurredBitmap,
                     src: offsetViewRect,
                     dst: viewRect,
-                    paint: acrylicPaint);
+                    paint: null);
                 
-                canvas.DrawRect(viewRect, new Paint { Color = BackgroundColor });
+                //canvas.DrawRect(viewRect, new Paint { Color = BackgroundColor });
+                
+                // TODO: Tie this into new enum like iOS for light/dark and blur radius
+                // USe Black to Darken and White to Lighten. This works better than a ColorFilter on the Paint
+                canvas.DrawRect(viewRect, new Paint { Color = Color.Black, Alpha = (int)(255 * 0.30) });
                 
                 canvas.Restore();
 
@@ -376,6 +383,8 @@ namespace BlurView.Droid
              
              try { _internalBlurredAllocation?.Dispose(); } catch { /* do nothing */ }
              _internalBlurredAllocation = null;
+
+             _acrylicView.OutlineProvider = null;
          }
 
          public void Dispose()
@@ -389,6 +398,14 @@ namespace BlurView.Droid
              Dispose(false);
          }
          #endregion
+
+         public override void GetOutline(View? view, Outline? outline)
+         {
+             view.ClipToOutline = true;
+             outline.SetEmpty();
+             if (_viewPath is not null)
+                 outline.SetPath(_viewPath);
+         }
     }
     
     internal class AcrylicCanvas : Canvas

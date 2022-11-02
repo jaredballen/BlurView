@@ -38,6 +38,7 @@
         
         <local:AcrylicView Grid.Column="0"
                         BackgroundColor="#73740000"
+                        Elevation="0"
                         BlurRadius="25"
                         VerticalOptions="Center"
                         HeightRequest="200" />
@@ -45,7 +46,7 @@
         <local:AcrylicView Grid.Column="0"
                         Grid.ColumnSpan="2"
                         BackgroundColor="#73007300"
-                        Elevation="2"
+                        Elevation="10"
                         BlurRadius="15"
                         HorizontalOptions="Center"
                         VerticalOptions="Center"
