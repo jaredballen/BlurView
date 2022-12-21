@@ -56,6 +56,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="AcrylicViewRenderer.cs" />
+        <Compile Include="Extensions\ViewExtensions.cs" />
         <Compile Include="MainActivity.cs" />
         <Compile Include="Renderers\SKCanvasViewRenderer.cs" />
         <Compile Include="Resources\Resource.Designer.cs" />

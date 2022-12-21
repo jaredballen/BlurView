@@ -18,12 +18,13 @@ namespace BlurView.Droid
             
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             Xamarin.Forms.Forms.Init(this, savedInstanceState);
+            
+            CachedImageRenderer.Init(true);
+            CachedImageRenderer.InitImageViewHandler();
 
             // Need to do this to register the new svg canvas view rendered for Android
             // 
             // Dependency.Register(typeof (FileImageSource), typeof (FFImageLoadingImageViewHandler));
-            
-            CachedImageRenderer.InitImageViewHandler();
             
             LoadApplication(new App());
         }
