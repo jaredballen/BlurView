@@ -46,6 +46,9 @@
         <Reference Include="System.Core" />
         <Reference Include="System.Xml.Linq" />
         <Reference Include="System.Xml" />
+        <Reference Include="Xamarin.Forms.Core">
+          <HintPath>..\..\..\.nuget\packages\xamarin.forms\5.0.0.2012\lib\netstandard2.0\Xamarin.Forms.Core.dll</HintPath>
+        </Reference>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="SkiaSharp.Views.Forms" Version="2.88.3" />
@@ -55,7 +58,9 @@
         <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="AcrylicCanvas.cs" />
         <Compile Include="AcrylicViewRenderer.cs" />
+        <Compile Include="BlurController.cs" />
         <Compile Include="Extensions\ViewExtensions.cs" />
         <Compile Include="MainActivity.cs" />
         <Compile Include="Renderers\SKCanvasViewRenderer.cs" />
