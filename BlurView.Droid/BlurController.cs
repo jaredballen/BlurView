@@ -1,13 +1,14 @@
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Timers;
+using Android;
 using Android.Graphics;
 using Android.Renderscripts;
 using Android.Util;
 using Android.Views;
 using BlurView.Droid.Extensions;
-using Java.Lang.Reflect;
-using Xamarin.Forms.PlatformConfiguration.WindowsSpecific;
-using Element = Xamarin.Forms.Element;
+using FFImageLoading;
+using SkiaSharp;
 
 namespace BlurView.Droid;
 
@@ -31,9 +32,7 @@ internal class BlurController : ViewOutlineProvider, IDisposable
 
     private Allocation? _internalAllocation;
     private Allocation? _internalBlurredAllocation;
-        
-    private bool _isDrawing;
-
+    
     private Color _backgroundColor;
     public Color BackgroundColor
     {
@@ -81,13 +80,13 @@ internal class BlurController : ViewOutlineProvider, IDisposable
         _renderScript = RenderScript.Create(_acrylicView.Context);
         _blur = ScriptIntrinsicBlur.Create(_renderScript, Android.Renderscripts.Element.U8_4(_renderScript));
     }
-        
+
+    private static TimeSpan MaxInvalidateInterval = TimeSpan.FromMilliseconds(50); // 60 Hz refresh rate
+    private DateTime _lastInvalidate = DateTime.Now - MaxInvalidateInterval;
+    
     internal void OnPreDraw()
     {
-        var contentDescription = _acrylicView.ContentDescription;
-        
-        if (_rootView.Width <= 0 || _rootView.Height <= 0)
-            return;
+        if (_rootView.Width <= 0 || _rootView.Height <= 0) return;
         
         if (_rootView.Width != _rootViewWidth  || _rootView.Height != _rootViewHeight)
         {
@@ -116,15 +115,17 @@ internal class BlurController : ViewOutlineProvider, IDisposable
             _internalAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBitmap);
             _internalBlurredAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBlurredBitmap);
         }
-            
-        if (!_acrylicView.IsDirty)
-            _acrylicView.PostInvalidate();
+
+        if (DateTime.Now - _lastInvalidate <= MaxInvalidateInterval) return;
+        _lastInvalidate = DateTime.Now;
+        _acrylicView.PostInvalidate();
     }
+    
+    private readonly object DrawSync = new ();
+    private int _drawing = 0;
     
     internal bool Draw(Canvas canvas)
     {
-        //if (_isDrawing || _internalCanvas is null || ReferenceEquals(canvas, _internalCanvas)) return false;
-
         if (canvas is AcrylicCanvas otherAcrylicCanvas)
         {
             Log.Info("AcrylicView",$"Draw {_acrylicView.ContentDescription} onto {otherAcrylicCanvas.View.ContentDescription}");
@@ -138,78 +139,37 @@ internal class BlurController : ViewOutlineProvider, IDisposable
 
         if (ReferenceEquals(canvas, _internalCanvas))
         {
-            Log.Warn("AcrylicView", $"Attempt tp draw to self: {_acrylicView.ContentDescription}");
+            Log.Warn("AcrylicView", $"Attempt to draw to self: {_acrylicView.ContentDescription}");
             return false;
         }
 
         if (canvas is AcrylicCanvas otherAcrylicCanvas1)
-    {
-            var cd1 = _acrylicView.ContentDescription;
-            var dc2 = otherAcrylicCanvas1.View.ContentDescription;
-
-            var isOnTop = _acrylicView.Intersects(otherAcrylicCanvas1.View) &&
-                          _acrylicView.Element.Above(otherAcrylicCanvas1.View.Element);
-            
-            if (_acrylicView.Intersects(otherAcrylicCanvas1.View))
+        {
+            var intersects = _acrylicView.Intersects(otherAcrylicCanvas1.View);
+            if (!intersects)
             {
-                
-                var parent1 = _acrylicView.Element.Parent;
-                var parents1 = new Stack<Element>();
-                while (parent1 is not null)
-                {
-                    parents1.Push(parent1);
-                    parent1 = parent1.Parent;
-                }
-                var parent2 = otherAcrylicCanvas1.View.Element.Parent;
-                var parents2 = new Stack<Element>();
-                while (parent2 is not null)
-                {
-                    parents2.Push(parent2);
-                    parent2 = parent2.Parent;
-                }
-
-                if (!parents1.TryPeek(out parent1) || !parents2.TryPeek(out parent2) || !ReferenceEquals(parent1, parent2))
-                    throw new Exception("View do NOT share root parent!?");
-                
-                while (parents1.TryPop(out parent1) && parents2.TryPop(out parent2))
-                {
-                    parents1.TryPeek(out var peekParent1);
-                    parents2.TryPeek(out var peekParent2);
-
-                    peekParent1 ??= _acrylicView.Element;
-                    peekParent2 ??= otherAcrylicCanvas1.View.Element;
-                    
-                    var index1 = parent1?.LogicalChildren.IndexOf(peekParent1) ?? int.MaxValue;
-                    var index2 = parent2?.LogicalChildren.IndexOf(peekParent2) ?? int.MaxValue;
-
-                    if (index1 > index2)
-                        return false;
-                }
-                
-                var z1 = _acrylicView.GetZ();
-                var z2 = otherAcrylicCanvas1.View.GetZ();
-                Log.Warn("AcrylicView", $"Overlap: {_acrylicView.ContentDescription}, {otherAcrylicCanvas1.View.ContentDescription}");
+                Log.Warn("AcrylicView", $"No intersection: {_acrylicView.ContentDescription}, {otherAcrylicCanvas1.View.ContentDescription}");
+                return false;
             }
-            else
+            
+            var above = _acrylicView.Element.Above(otherAcrylicCanvas1.View.Element);
+            if (above)
             {
-                Log.Warn("AcrylicView", $"No overlap: {_acrylicView.ContentDescription}, {otherAcrylicCanvas1.View.ContentDescription}");
+                Log.Warn("AcrylicView", $"Above: {_acrylicView.ContentDescription}, {otherAcrylicCanvas1.View.ContentDescription}");
                 return false;
             }
         }
-                
-        // if (canvas is AcrylicCanvas otherAcrylicCanvas && !_acrylicView.Overlaps(otherAcrylicCanvas.View))
-        //     return false;
-        //
-        if (_isDrawing)
-            return false;
         
         try
         {
-            _isDrawing = true;
+            lock (DrawSync)
+            {
+                if (++_drawing > 1)
+                    return false;
+            }
 
             Log.Info("AcrylicView", $"Start Drawing: {_acrylicView.ContentDescription}");
-            
-            
+
             _rootView.GetLocationOnScreen(_rootViewLocation);
             _acrylicView.GetLocationOnScreen(_blurViewLocation);
 
@@ -220,10 +180,7 @@ internal class BlurController : ViewOutlineProvider, IDisposable
                 
             var offsetViewRect = new Rect((int)(left * 0.25), (int)(top * 0.25), (int)((left + width) * 0.25), (int)((top + height) * 0.25));
             var viewRect = new Rect(0, 0, width, height);
-
-                
-                
-                
+            
             var temp = (int)DpToPixel(16);
             var _ul = temp;
             var _ur = temp;
@@ -268,8 +225,15 @@ internal class BlurController : ViewOutlineProvider, IDisposable
             // }
 
             canvas.ClipPath(_viewPath, Region.Op.Intersect);
-                
-            _rootView.Draw(_internalCanvas);
+
+            try
+            {
+                _rootView.Draw(_internalCanvas);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             
             using var scaledBitmap = Bitmap.CreateScaledBitmap(_internalBitmap, (int)(_rootViewWidth * 0.25), (int)(_rootViewHeight * 0.25), true);
                 
@@ -300,15 +264,16 @@ internal class BlurController : ViewOutlineProvider, IDisposable
         catch (Exception e)
         {
             Console.WriteLine();
+            return false;
         }
         finally
         {
-            _isDrawing = false;
-            
+            lock (DrawSync)
+            {
+                --_drawing;
+            }
             Log.Info("AcrylicView", $"Finished Drawing: {_acrylicView.ContentDescription}");
         }
-
-        return true;
     }
 
     private (int r0, int r1) GetNormalizedRadius(int r0, int r1, int length)

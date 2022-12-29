@@ -23,12 +23,12 @@
                FontAttributes="Bold"
                Text="BlurView Test" />
         
-        <!--<local:AcrylicView Grid.Column="0"
+        <!----><local:AcrylicView Grid.Column="0"
                                   AutomationProperties.HelpText="AcrylicView1"
                         BackgroundColor="#73007300"
                         BlurRadius="25"
                         VerticalOptions="Start"
-                        HeightRequest="50" />-->
+                        HeightRequest="50" />
         
         <local:SKCanvasView Grid.ColumnSpan="2"
                             HorizontalOptions="Center"
@@ -48,11 +48,15 @@
                                BackgroundColor="#73007300"
                                Elevation="10"
                                BlurRadius="10">
-                <BoxView BackgroundColor="Yellow"
-                         HorizontalOptions="Center"
-                         VerticalOptions="Center"
-                         WidthRequest="10"
-                         HeightRequest="10" />
+        
+        <BoxView Grid.Column="0"
+                 Grid.ColumnSpan="2"
+                 BackgroundColor="Yellow"
+                 HorizontalOptions="Center"
+                 VerticalOptions="Center"
+                 WidthRequest="50"
+                 HeightRequest="50" />
+
             </local:AcrylicView>
         </ContentView>
 

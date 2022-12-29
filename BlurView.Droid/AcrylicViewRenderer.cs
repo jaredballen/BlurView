@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using Android.Content;
 using Android.Graphics;
 using Android.Hardware;
@@ -48,19 +49,18 @@ namespace BlurView.Droid
             }
         }
 
-        protected override void OnDraw(Canvas? canvas)
-        {
-            if (Visibility is not ViewStates.Visible)
-                throw new Exception();
-            
-            base.OnDraw(canvas);
-        }
-
+        private readonly object DrawSync = new ();
+        private int _drawing = 0;
+        
         public override void Draw(Canvas canvas)
         {
             try
             {
-                ViewTreeObserver.RemoveOnPreDrawListener(this);
+                lock (DrawSync)
+                {
+                    if (++_drawing == 1)
+                        ViewTreeObserver.RemoveOnPreDrawListener(this);
+                }
 
                 if (!(_blurController?.Draw(canvas) ?? false)) return;
                 base.Draw(canvas);
@@ -68,7 +68,11 @@ namespace BlurView.Droid
             }
             finally
             {
-                ViewTreeObserver.AddOnPreDrawListener(this);
+                lock (DrawSync)
+                {
+                    if (--_drawing == 0)
+                        ViewTreeObserver.AddOnPreDrawListener(this);
+                }
             }
         }
 
