@@ -8,6 +8,7 @@ using Android.Content;
 using Android.Graphics;
 using Android.Hardware;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using BlurView.Droid;
 using Xamarin.Forms;
@@ -33,6 +34,7 @@ namespace BlurView.Droid
         
         public bool OnPreDraw()
         {
+            Log.Warn(ContentDescription, $"OnPreDraw");
             _blurController?.OnPreDraw();
             return true;
         }
@@ -51,31 +53,71 @@ namespace BlurView.Droid
 
         private readonly object DrawSync = new ();
         private int _drawing = 0;
-        
-        public override void Draw(Canvas canvas)
+
+        protected override void OnDraw(Canvas? canvas)
         {
+            var drawing = 0;
             try
             {
                 lock (DrawSync)
                 {
-                    if (++_drawing == 1)
+                    drawing = _drawing;
+                    Log.Info(ContentDescription, $"OnDraw - Start - {drawing}");
+                    
+                    if (_drawing == 0)
+                    {
+                        Log.Info(ContentDescription, $"RemoveOnPreDrawListener");
                         ViewTreeObserver.RemoveOnPreDrawListener(this);
+                    }
+
+                    _drawing++;
                 }
 
                 if (!(_blurController?.Draw(canvas) ?? false)) return;
-                base.Draw(canvas);
+                base.OnDraw(canvas);
                 SetBackgroundColor(Color.Transparent);
             }
             finally
             {
                 lock (DrawSync)
                 {
-                    if (--_drawing == 0)
+                    _drawing--;
+                    
+                    if (_drawing == 0)
+                    {
+                        Log.Info(ContentDescription, $"AddOnPreDrawListener");
                         ViewTreeObserver.AddOnPreDrawListener(this);
+                    }
+                    
+                    Log.Info(ContentDescription, $"OnDraw - Finish - {drawing}");
                 }
             }
         }
-
+        
+        // public override void Draw(Canvas canvas)
+        // {
+        //     try
+        //     {
+        //         lock (DrawSync)
+        //         {
+        //             if (++_drawing == 1)
+        //                 ViewTreeObserver.RemoveOnPreDrawListener(this);
+        //         }
+        //
+        //         if (!(_blurController?.Draw(canvas) ?? false)) return;
+        //         base.Draw(canvas);
+        //         SetBackgroundColor(Color.Transparent);
+        //     }
+        //     finally
+        //     {
+        //         lock (DrawSync)
+        //         {
+        //             if (--_drawing == 0)
+        //                 ViewTreeObserver.AddOnPreDrawListener(this);
+        //         }
+        //     }
+        // }
+        
         protected override void OnAttachedToWindow()
         {
             base.OnAttachedToWindow();

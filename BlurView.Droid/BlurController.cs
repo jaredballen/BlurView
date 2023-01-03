@@ -79,9 +79,27 @@ internal class BlurController : ViewOutlineProvider, IDisposable
             
         _renderScript = RenderScript.Create(_acrylicView.Context);
         _blur = ScriptIntrinsicBlur.Create(_renderScript, Android.Renderscripts.Element.U8_4(_renderScript));
-    }
 
-    private static TimeSpan MaxInvalidateInterval = TimeSpan.FromMilliseconds(50); // 60 Hz refresh rate
+        // Task.Run(async () =>
+        // {
+        //     while (true)
+        //     {
+        //         await Task.Delay(MaxInvalidateInterval);
+        //
+        //         if (_isDirty && !_invalidated)
+        //         {
+        //             _invalidated = true;
+        //             _isDirty = false;
+        //             _acrylicView.PostInvalidate();
+        //         }
+        //     }
+        // });
+    }
+    
+    
+    private bool _isDirty;
+    private bool _invalidated;
+    private static TimeSpan MaxInvalidateInterval = TimeSpan.FromMilliseconds(16.67); //50); // 60 Hz refresh rate
     private DateTime _lastInvalidate = DateTime.Now - MaxInvalidateInterval;
     
     internal void OnPreDraw()
@@ -116,8 +134,12 @@ internal class BlurController : ViewOutlineProvider, IDisposable
             _internalBlurredAllocation = Allocation.CreateFromBitmap(_renderScript, _internalBlurredBitmap);
         }
 
+        if (!_invalidated)
+            _isDirty = true;
+        
         if (DateTime.Now - _lastInvalidate <= MaxInvalidateInterval) return;
         _lastInvalidate = DateTime.Now;
+        Log.Warn(_acrylicView.ContentDescription,$"PostInvalidate");
         _acrylicView.PostInvalidate();
     }
     
@@ -159,16 +181,19 @@ internal class BlurController : ViewOutlineProvider, IDisposable
                 return false;
             }
         }
+
+        var drawing = -1;
         
         try
         {
             lock (DrawSync)
             {
+                drawing = _drawing;
                 if (++_drawing > 1)
                     return false;
             }
 
-            Log.Info("AcrylicView", $"Start Drawing: {_acrylicView.ContentDescription}");
+            Log.Info("AcrylicView", $"Start Drawing: {drawing} - {_acrylicView.ContentDescription}");
 
             _rootView.GetLocationOnScreen(_rootViewLocation);
             _acrylicView.GetLocationOnScreen(_blurViewLocation);
@@ -229,10 +254,12 @@ internal class BlurController : ViewOutlineProvider, IDisposable
             try
             {
                 _rootView.Draw(_internalCanvas);
+                _invalidated = false;
+                _isDirty = false;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                //Console.WriteLine(e);
             }
             
             using var scaledBitmap = Bitmap.CreateScaledBitmap(_internalBitmap, (int)(_rootViewWidth * 0.25), (int)(_rootViewHeight * 0.25), true);
@@ -268,11 +295,12 @@ internal class BlurController : ViewOutlineProvider, IDisposable
         }
         finally
         {
+            Log.Info("AcrylicView", $"Finished Drawing: {drawing} - {_acrylicView.ContentDescription}");
+            
             lock (DrawSync)
             {
                 --_drawing;
             }
-            Log.Info("AcrylicView", $"Finished Drawing: {_acrylicView.ContentDescription}");
         }
     }
 
