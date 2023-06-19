@@ -15,7 +15,7 @@
         <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
         <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
         <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-        <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
+        <TargetFrameworkVersion>v13.0</TargetFrameworkVersion>
         <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
@@ -61,6 +61,16 @@
         <Compile Include="AcrylicCanvas.cs" />
         <Compile Include="AcrylicViewRenderer.cs" />
         <Compile Include="BlurController.cs" />
+        <Compile Include="DirectPort\BlurViewCanvas.cs" />
+        <Compile Include="DirectPort\IBlurAlgorithm.cs" />
+        <Compile Include="DirectPort\IBlurController.cs" />
+        <Compile Include="DirectPort\BlurView.cs" />
+        <Compile Include="DirectPort\IBlurViewFacade.cs" />
+        <Compile Include="DirectPort\NoOpController.cs" />
+        <Compile Include="DirectPort\PreDrawBlurController.cs" />
+        <Compile Include="DirectPort\RenderEffectBlur.cs" />
+        <Compile Include="DirectPort\RenderScriptBlur.cs" />
+        <Compile Include="DirectPort\SizeScaler.cs" />
         <Compile Include="Extensions\ViewExtensions.cs" />
         <Compile Include="MainActivity.cs" />
         <Compile Include="Renderers\SKCanvasViewRenderer.cs" />

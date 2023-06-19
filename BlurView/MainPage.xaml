@@ -10,11 +10,18 @@
     <Grid ColumnDefinitions="*, *"
           RowSpacing="0"
           ColumnSpacing="0">
-        
-        <ffimage:SvgCachedImage Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                Aspect="AspectFill"
-                                Source="resource://BlurView.Resources.Images.background.svg" />
+
+        <ScrollView Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    VerticalScrollBarVisibility="Always"
+                    HorizontalScrollBarVisibility="Always">
+                
+            <ffimage:SvgCachedImage Aspect="Fill"
+                                    HorizontalOptions="Start"
+                                    WidthRequest="2048"
+                                    Source="resource://BlurView.Resources.Images.background.svg" />
+            
+        </ScrollView>
         
         <Label Grid.ColumnSpan="2"
                HorizontalOptions="Center"
@@ -23,12 +30,20 @@
                FontAttributes="Bold"
                Text="BlurView Test" />
         
-        <!----><local:AcrylicView Grid.Column="0"
+        <!--<local:AcrylicView Grid.Column="0"
                                   AutomationProperties.HelpText="AcrylicView1"
                         BackgroundColor="#73007300"
                         BlurRadius="25"
                         VerticalOptions="Start"
-                        HeightRequest="50" />
+                        HeightRequest="50" />-->
+        
+        <local:BlurView Grid.Column="0"
+                        AutomationProperties.HelpText="AcrylicView1"
+                        BackgroundColor="#2F0000FF"
+                        VerticalOptions="Start"
+                        BlurRadius="5"
+                        HeightRequest="50"  />
+        
         
         <local:SKCanvasView Grid.ColumnSpan="2"
                             HorizontalOptions="Center"
@@ -44,7 +59,7 @@
                    WidthRequest="75"
                    HeightRequest="250"
                    >
-            <local:AcrylicView AutomationProperties.HelpText="AcrylicView2"
+            <!--<local:AcrylicView AutomationProperties.HelpText="AcrylicView2"
                                BackgroundColor="#73007300"
                                Elevation="10"
                                BlurRadius="10">
@@ -57,11 +72,22 @@
                  WidthRequest="50"
                  HeightRequest="50" />
 
-            </local:AcrylicView>
+            </local:AcrylicView>-->
+            
+            <local:BlurView AutomationProperties.HelpText="AcrylicView2"
+                            BackgroundColor="#2F00FF00"
+                            BlurRadius="25">
+                <BoxView BackgroundColor="Yellow"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         WidthRequest="50"
+                         HeightRequest="50" />
+            </local:BlurView>
+            
         </ContentView>
 
         
-        <!----><local:AcrylicView Grid.Column="0"
+        <!--<local:AcrylicView Grid.Column="0"
                                   
                                   WidthRequest="100"
                                   HorizontalOptions="End"
@@ -70,7 +96,15 @@
                            Elevation="1"
                            BlurRadius="12"
                            VerticalOptions="Center"
-                           HeightRequest="225" />
+                           HeightRequest="225" />-->
+        
+        <local:BlurView Grid.Column="0"
+                        WidthRequest="100"
+                        HorizontalOptions="End"
+                        AutomationProperties.HelpText="AcrylicView3"
+                        BackgroundColor="#2FFF0000"
+                        VerticalOptions="Center"
+                        HeightRequest="225" />
     </Grid>
 
 </ContentPage>
