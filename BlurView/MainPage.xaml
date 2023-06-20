@@ -15,7 +15,7 @@
                     Grid.ColumnSpan="2"
                     VerticalScrollBarVisibility="Always"
                     HorizontalScrollBarVisibility="Always">
-                
+               
             <ffimage:SvgCachedImage Aspect="Fill"
                                     HorizontalOptions="Start"
                                     WidthRequest="2048"
@@ -43,11 +43,7 @@
                         BackgroundColor="#2F0000FF"
                         VerticalOptions="Start"
                         BlurRadius="5"
-                        HeightRequest="50" >
-            <Label HorizontalOptions="End"
-                   VerticalOptions="End"
-                   Text="{Binding RedrawsPerSecond, Source={x:Reference AcrylicView1}, StringFormat='{0:F0}'}" />
-        </local:BlurView>
+                        HeightRequest="50" />
         
         
         <local:SKCanvasView Grid.ColumnSpan="2"
@@ -82,19 +78,12 @@
             <local:BlurView x:Name="AcrylicView2"
                             AutomationProperties.HelpText="AcrylicView2"
                             BackgroundColor="#2F00FF00"
-                            BlurRadius="25">
-                <Grid>
-                    <BoxView BackgroundColor="Yellow"
-                             HorizontalOptions="Center"
-                             VerticalOptions="Center"
-                             WidthRequest="50"
-                             HeightRequest="50" />
-                    
-                    
-                    <Label HorizontalOptions="End"
-                           VerticalOptions="End"
-                           Text="{Binding RedrawsPerSecond, Source={x:Reference AcrylicView2}, StringFormat='{0:F0}'}" />
-                </Grid>
+                            BlurRadius="8">
+                <BoxView BackgroundColor="Yellow"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         WidthRequest="50"
+                         HeightRequest="50" />
             </local:BlurView>
             
         </ContentView>
@@ -113,16 +102,13 @@
         
         <local:BlurView x:Name="AcrylicView3"
                         Grid.Column="0"
+                        BlurRadius="4"
                         WidthRequest="100"
                         HorizontalOptions="End"
                         AutomationProperties.HelpText="AcrylicView3"
                         BackgroundColor="#2FFF0000"
                         VerticalOptions="Center"
-                        HeightRequest="225" >
-            <Label HorizontalOptions="End"
-                   VerticalOptions="End"
-                   Text="{Binding RedrawsPerSecond, Source={x:Reference AcrylicView3}, StringFormat='{0:F0}'}" />
-        </local:BlurView>
+                        HeightRequest="225" />
     </Grid>
 
 </ContentPage>
