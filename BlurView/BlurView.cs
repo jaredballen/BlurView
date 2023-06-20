@@ -22,4 +22,19 @@ public class BlurView : ContentView
         set => SetValue(BlurRadiusProperty, value);
     }
     #endregion
+    
+    #region RedrawsPerSecond Property
+    public static readonly BindableProperty RedrawsPerSecondProperty = BindableProperty.Create(
+        propertyName: nameof(RedrawsPerSecond),
+        returnType: typeof(double),
+        declaringType: typeof(BlurView),
+        defaultValue: default(double),
+        defaultBindingMode: BindingMode.OneWay);
+
+    public double RedrawsPerSecond
+    {
+        get => ( double )GetValue(RedrawsPerSecondProperty);
+        set => SetValue(RedrawsPerSecondProperty, value);
+    }
+    #endregion
 }

@@ -2,8 +2,12 @@ using System;
 using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using AndroidX.Annotations;
+using BlurView.Droid.Extensions;
+using Xamarin.Forms.Platform.Android;
+using View = Xamarin.Forms.View;
 
 namespace EightBitLab.Com.BlurView
 {
@@ -64,7 +68,7 @@ namespace EightBitLab.Com.BlurView
             BlurView.SetWillNotDraw(false);
             SizeScaler.Size bitmapSize = sizeScaler.Scale(measuredWidth, measuredHeight);
             internalBitmap = Bitmap.CreateBitmap(bitmapSize.Width, bitmapSize.Height, blurAlgorithm.GetSupportedBitmapConfig());
-            internalCanvas = new BlurViewCanvas(internalBitmap);
+            internalCanvas = new BlurViewCanvas(internalBitmap, BlurView);
             initialized = true;
             // Usually it's not needed, because `onPreDraw` updates the blur anyway.
             // But it handles cases when the PreDraw listener is attached to a different Window, for example
@@ -124,10 +128,34 @@ namespace EightBitLab.Com.BlurView
             }
             // Not blurring itself or other BlurViews to not cause recursive draw calls
             // Related: https://github.com/Dimezis/BlurView/issues/110
-            if (canvas is BlurViewCanvas otherBlurViewCanvas && ReferenceEquals(otherBlurViewCanvas, internalCanvas))
+            if (canvas is BlurViewCanvas otherBlurViewCanvas)
             {
-                return false;
+                // Do not draw to self. This is VERY BAD!!!! It WILL cause drawing to NEVER STOP!!!!
+                // 
+                if (ReferenceEquals(otherBlurViewCanvas, internalCanvas))
+                {
+                    return false;
+                }
+
+                // No need to draw if the blur views do not overlap. It is inefficient to draw if the views overlap but
+                // it won't cause infinite redraws.
+                //
+                if (!otherBlurViewCanvas._view.Intersects(internalCanvas._view))
+                {
+                    Log.Debug("BlurView", "SKIPPED: {0} does NOT intersect {1}", otherBlurViewCanvas._view.ContentDescription, internalCanvas._view.ContentDescription);
+                    return false;
+                }
+                
+                // No need to draw if the other blur view is NOT above this one. As drawing this view would not affect
+                // the appearance of the a blue view below itself.
+                //
+                if (!(((otherBlurViewCanvas._view as IVisualElementRenderer).Element as View)?.Above((internalCanvas._view as IVisualElementRenderer).Element as View) ?? true))
+                {
+                    Log.Debug("BlurView", "SKIPPED: {0} is above {1}", internalCanvas._view.ContentDescription, otherBlurViewCanvas._view.ContentDescription);
+                    return false;
+                }
             }
+            
 
             // https://github.com/Dimezis/BlurView/issues/128
             float scaleFactorH = (float)BlurView.Height / internalBitmap.Height;

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Android.Content;
 using Android.Content.Res;
@@ -26,6 +28,16 @@ namespace EightBitLab.Com.BlurViewLibrary
         
         private float BlurRadius => (float)((Element as global::BlurView.BlurView)?.BlurRadius ?? global::BlurView.BlurView.DefaultBlurRadius);
 
+        private double RedrawsPerSecond
+        {
+            get => (Element as global::BlurView.BlurView)?.RedrawsPerSecond ?? 0;
+            set
+            {
+                if (Element is not global::BlurView.BlurView blurView) return;
+                blurView.RedrawsPerSecond = value;
+            }
+        }
+        
         public BlurView(Context context) : base(context)
         {
             Init(null, 0);
@@ -38,6 +50,9 @@ namespace EightBitLab.Com.BlurViewLibrary
             a.Recycle();
         }
 
+        private DateTime t0 = DateTime.Now;
+        private List<double> samples = new List<double>();
+        
         public override void Draw(Canvas canvas)
         {
             bool shouldDraw = blurController.Draw(canvas);
@@ -45,6 +60,17 @@ namespace EightBitLab.Com.BlurViewLibrary
             {
                 base.Draw(canvas);
             }
+        }
+
+        protected override void OnDraw(Canvas? canvas)
+        {
+            var t1 = DateTime.Now;
+            samples.Add((t1 - t0).TotalSeconds);
+            t0 = t1;
+            Log.Debug("BlurView", "{0}: rate = {1:F0} Hz", ContentDescription, samples.Count / samples.Sum());
+            if (samples.Count > 5) samples.RemoveAt(0);
+            
+            base.OnDraw(canvas);
         }
 
         protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
