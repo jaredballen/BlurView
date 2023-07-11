@@ -1,12 +1,8 @@
 using Android.Content;
 using Android.Graphics;
-using BlurView;
-using BlurView.Droid.Renderers;
-using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using View = Android.Views.View;
 
-[assembly: ExportRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer))]
 namespace BlurView.Droid.Renderers
 {
     public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRenderer

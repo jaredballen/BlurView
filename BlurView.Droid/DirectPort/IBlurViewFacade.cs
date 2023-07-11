@@ -8,10 +8,6 @@ namespace EightBitLab.Com.BlurView
 
         IBlurViewFacade SetBlurAutoUpdate(bool enabled);
 
-        IBlurViewFacade SetFrameClearDrawable(Drawable frameClearDrawable);
-
         IBlurViewFacade SetBlurRadius(float radius);
-
-        IBlurViewFacade SetOverlayColor(int overlayColor);
     }
 }

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:BlurView"
              xmlns:ffimage="clr-namespace:FFImageLoading.Svg.Forms;assembly=FFImageLoading.Svg.Forms"
+             xmlns:forms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="BlurView.MainPage"
              x:Name="RootView"
              Background="White">
@@ -46,7 +47,7 @@
                         HeightRequest="50" />
         
         
-        <local:SKCanvasView Grid.ColumnSpan="2"
+        <forms:SKCanvasView Grid.ColumnSpan="2"
                             HorizontalOptions="Center"
                             VerticalOptions="Center"
                             HeightRequest="100"
@@ -102,7 +103,7 @@
         
         <local:BlurView x:Name="AcrylicView3"
                         Grid.Column="0"
-                        BlurRadius="4"
+                        BlurRadius="1"
                         WidthRequest="100"
                         HorizontalOptions="End"
                         AutomationProperties.HelpText="AcrylicView3"

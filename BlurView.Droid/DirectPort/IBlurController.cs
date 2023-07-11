@@ -4,7 +4,7 @@ namespace EightBitLab.Com.BlurView
 {
     public interface IBlurController : IBlurViewFacade
     {
-        const float DEFAULT_SCALE_FACTOR = 6f;
+        const float DEFAULT_SCALE_FACTOR = 1f;
         const float DEFAULT_BLUR_RADIUS = 16f;
 
         /**

@@ -1,16 +1,11 @@
 using Android.Graphics;
-using Android.Views;
-using AndroidX.Annotations;
 
-namespace EightBitLab.Com.BlurView
+namespace BlurView.Droid.DirectPort;
+
+public class BlurViewCanvas : Canvas
 {
-    public class BlurViewCanvas : Canvas
-    {
-        internal readonly BlurViewLibrary.BlurView _view;
-
-        public BlurViewCanvas([NonNull] Bitmap bitmap, BlurViewLibrary.BlurView view) : base(bitmap)
-        {
-            _view = view;
-        }
-    }
+    internal EightBitLab.Com.BlurViewLibrary.BlurView BlurView { get; }
+        
+    public BlurViewCanvas(Bitmap bitmap, EightBitLab.Com.BlurViewLibrary.BlurView blurView)
+        : base(bitmap) => BlurView = blurView;
 }

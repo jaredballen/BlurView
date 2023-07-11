@@ -3,9 +3,7 @@ using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using Android.Renderscripts;
-using Android.Runtime;
 using AndroidX.Annotations;
-using BlurView.Droid;
 
 namespace EightBitLab.Com.BlurView
 {

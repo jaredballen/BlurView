@@ -2,6 +2,9 @@
 using Android.Content.PM;
 using Android.OS;
 using FFImageLoading.Forms.Platform;
+using SkiaSharp.Views.Forms;
+using Xamarin.Forms.Internals;
+using SKCanvasViewRenderer = BlurView.Droid.Renderers.SKCanvasViewRenderer;
 
 namespace BlurView.Droid
 {
@@ -26,6 +29,8 @@ namespace BlurView.Droid
             // 
             // Dependency.Register(typeof (FileImageSource), typeof (FFImageLoadingImageViewHandler));
             
+            Registrar.Registered.Register(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
+        
             LoadApplication(new App());
         }
     }

@@ -2,17 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Android.Content;
-using Android.Content.Res;
 using Android.Graphics;
 using Android.OS;
 using Android.Util;
 using Android.Views;
-using AndroidX.Annotations;
 using EightBitLab.Com.BlurView;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
-using Color = Android.Graphics.Color;
-using Resource = BlurView.Droid.Resource;
 
 [assembly: ExportRenderer(typeof(BlurView.BlurView), typeof(EightBitLab.Com.BlurViewLibrary.BlurView))]
 namespace EightBitLab.Com.BlurViewLibrary
@@ -71,7 +67,7 @@ namespace EightBitLab.Com.BlurViewLibrary
                               Application.Current?.MainPage ??
                               Shell.Current.CurrentPage;
 
-            this.SetupWith(currentPage?.GetRenderer()?.View as ViewGroup)
+            SetupWith(currentPage?.GetRenderer()?.View as ViewGroup)
             .SetBlurRadius(BlurRadius);
             
             if (!IsHardwareAccelerated)
@@ -84,10 +80,10 @@ namespace EightBitLab.Com.BlurViewLibrary
             }
         }
 
-        private IBlurViewFacade SetupWith([NonNull] ViewGroup rootView)
+        private IBlurViewFacade SetupWith(ViewGroup? rootView)
         {
             blurController.Destroy();
-            blurController = new PreDrawBlurController(this, rootView, overlayColor, Build.VERSION.SdkInt >= BuildVersionCodes.S
+            blurController = new PreDrawBlurController(this, rootView, Build.VERSION.SdkInt >= BuildVersionCodes.S
                 ? new RenderEffectBlur()
                 : new RenderScriptBlur(Context));
 
@@ -97,12 +93,6 @@ namespace EightBitLab.Com.BlurViewLibrary
         public IBlurViewFacade SetBlurRadius(float radius)
         {
             return blurController.SetBlurRadius(radius);
-        }
-
-        public IBlurViewFacade SetOverlayColor(int overlayColor)
-        {
-            this.overlayColor = overlayColor;
-            return blurController.SetOverlayColor(overlayColor);
         }
 
         public IBlurViewFacade SetBlurAutoUpdate(bool enabled)

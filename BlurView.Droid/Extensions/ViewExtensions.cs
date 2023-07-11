@@ -27,19 +27,7 @@ public static class ViewExtensions
         var firstRect = new Rect(firstPosition[0], firstPosition[1], firstPosition[0] + firstView.Width, firstPosition[1] + firstView.Height);
         var secondRect = new Rect(secondPosition[0], secondPosition[1], secondPosition[0] + secondView.Width, secondPosition[1] + secondView.Height);
         
-        var intersectsMethod = Rect.Intersects(firstRect, secondRect);
-
-        var measuredIntersects = firstPosition[0] < secondPosition[0] + secondView.MeasuredWidth
-               && firstPosition[0] + firstView.MeasuredWidth > secondPosition[0]
-               && firstPosition[1] < secondPosition[1] + secondView.MeasuredHeight
-               && firstPosition[1] + firstView.MeasuredHeight > secondPosition[1];
-        
-        var intersects = firstPosition[0] < secondPosition[0] + secondView.Width
-               && firstPosition[0] + firstView.Width > secondPosition[0]
-               && firstPosition[1] < secondPosition[1] + secondView.Height
-               && firstPosition[1] + firstView.Height > secondPosition[1];
-
-        return intersectsMethod;
+        return Rect.Intersects(firstRect, secondRect);
     }
     
     public static bool Above(this Xamarin.Forms.View firstView, Xamarin.Forms.View secondView)
