@@ -72,7 +72,7 @@ namespace EightBitLab.Com.BlurView
 
         public float ScaleFactor()
         {
-            return IBlurController.DEFAULT_SCALE_FACTOR;
+            return IBlurController.DefaultScaleFactor;
         }
 
         public void Render(Canvas canvas, Bitmap bitmap)

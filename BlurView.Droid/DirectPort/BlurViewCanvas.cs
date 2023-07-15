@@ -4,8 +4,8 @@ namespace BlurView.Droid.DirectPort;
 
 public class BlurViewCanvas : Canvas
 {
-    internal EightBitLab.Com.BlurViewLibrary.BlurView BlurView { get; }
+    internal EightBitLab.Com.BlurViewLibrary.BlurViewRenderer BlurViewRenderer { get; }
         
-    public BlurViewCanvas(Bitmap bitmap, EightBitLab.Com.BlurViewLibrary.BlurView blurView)
-        : base(bitmap) => BlurView = blurView;
+    public BlurViewCanvas(Bitmap bitmap, EightBitLab.Com.BlurViewLibrary.BlurViewRenderer blurViewRenderer)
+        : base(bitmap) => BlurViewRenderer = blurViewRenderer;
 }

@@ -41,9 +41,8 @@
         <local:BlurView x:Name="AcrylicView1"
                         Grid.Column="0"
                         AutomationProperties.HelpText="AcrylicView1"
-                        BackgroundColor="#2F0000FF"
                         VerticalOptions="Start"
-                        BlurRadius="5"
+                        Material="UltraThinDark"
                         HeightRequest="50" />
         
         
@@ -78,8 +77,7 @@
             
             <local:BlurView x:Name="AcrylicView2"
                             AutomationProperties.HelpText="AcrylicView2"
-                            BackgroundColor="#2F00FF00"
-                            BlurRadius="8">
+                            Material="ThinLight">
                 <BoxView BackgroundColor="Yellow"
                          HorizontalOptions="Center"
                          VerticalOptions="Center"
@@ -103,11 +101,10 @@
         
         <local:BlurView x:Name="AcrylicView3"
                         Grid.Column="0"
-                        BlurRadius="1"
+                        Material="SystemDark"
                         WidthRequest="100"
                         HorizontalOptions="End"
                         AutomationProperties.HelpText="AcrylicView3"
-                        BackgroundColor="#2FFF0000"
                         VerticalOptions="Center"
                         HeightRequest="225" />
     </Grid>

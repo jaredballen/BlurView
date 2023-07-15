@@ -54,26 +54,24 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="SkiaSharp.Views.Forms" Version="2.88.3" />
+        <PackageReference Include="System.Reactive" Version="6.0.0" />
         <PackageReference Include="Xamarin.Essentials" Version="1.7.7" />
         <PackageReference Include="Xamarin.FFImageLoading.Forms" Version="2.4.11.982" />
         <PackageReference Include="Xamarin.FFImageLoading.Svg.Forms" Version="2.4.11.982" />
         <PackageReference Include="Xamarin.Forms" Version="5.0.0.2578" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="AcrylicCanvas.cs" />
-        <Compile Include="AcrylicViewRenderer.cs" />
-        <Compile Include="BlurController.cs" />
         <Compile Include="DirectPort\BlurViewCanvas.cs" />
         <Compile Include="DirectPort\IBlurAlgorithm.cs" />
         <Compile Include="DirectPort\IBlurController.cs" />
-        <Compile Include="DirectPort\BlurView.cs" />
-        <Compile Include="DirectPort\IBlurViewFacade.cs" />
+        <Compile Include="DirectPort\BlurViewRenderer.cs" />
         <Compile Include="DirectPort\NoOpController.cs" />
         <Compile Include="DirectPort\PreDrawBlurController.cs" />
         <Compile Include="DirectPort\RenderEffectBlur.cs" />
         <Compile Include="DirectPort\RenderScriptBlur.cs" />
         <Compile Include="DirectPort\SizeScaler.cs" />
         <Compile Include="Extensions\BitmapExtensions.cs" />
+        <Compile Include="Extensions\ColorExtensions.cs" />
         <Compile Include="Extensions\ViewExtensions.cs" />
         <Compile Include="MainActivity.cs" />
         <Compile Include="Renderers\SKCanvasViewRenderer.cs" />

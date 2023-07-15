@@ -15,10 +15,11 @@ namespace EightBitLab.Com.BlurView
 
         [Nullable]
         public IBlurAlgorithm fallbackAlgorithm;
-        private Context context;
+        private Context _context;
 
-        public RenderEffectBlur()
+        public RenderEffectBlur(Context context)
         {
+            _context = context;
         }
 
         public Bitmap Blur(Bitmap bitmap, float blurRadius)
@@ -58,7 +59,7 @@ namespace EightBitLab.Com.BlurView
 
         public float ScaleFactor()
         {
-            return IBlurController.DEFAULT_SCALE_FACTOR;
+            return IBlurController.DefaultScaleFactor;
         }
 
         public void Render(Canvas canvas, Bitmap bitmap)
@@ -71,16 +72,11 @@ namespace EightBitLab.Com.BlurView
             {
                 if (fallbackAlgorithm == null)
                 {
-                    fallbackAlgorithm = new RenderScriptBlur(context);
+                    fallbackAlgorithm = new RenderScriptBlur(_context);
                 }
                 fallbackAlgorithm.Blur(bitmap, lastBlurRadius);
                 fallbackAlgorithm.Render(canvas, bitmap);
             }
-        }
-
-        internal void SetContext(Context context)
-        {
-            this.context = context;
         }
     }
 }

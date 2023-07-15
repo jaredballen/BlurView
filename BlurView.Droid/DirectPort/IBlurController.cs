@@ -1,27 +1,23 @@
+using System;
 using Android.Graphics;
 
 namespace EightBitLab.Com.BlurView
 {
-    public interface IBlurController : IBlurViewFacade
+    public interface IBlurController : IDisposable
     {
-        const float DEFAULT_SCALE_FACTOR = 1f;
-        const float DEFAULT_BLUR_RADIUS = 16f;
-
+        const float DefaultBlurRadius = 16f;
+        const float DefaultScaleFactor = 1f;
+        
+        public float BlurRadius { get; set; }
+        public float ScaleFactor { get; set; }
+        public Color OverlayColor { get; set; }
+        public void Resize();
+        
         /**
          * Draws blurred content on given canvas
          *
          * @return true if BlurView should proceed with drawing itself and its children
          */
         bool Draw(Canvas canvas);
-
-        /**
-         * Must be used to notify Controller when BlurView's size has changed
-         */
-        void UpdateBlurViewSize();
-
-        /**
-         * Frees allocated resources
-         */
-        void Destroy();
     }
 }
