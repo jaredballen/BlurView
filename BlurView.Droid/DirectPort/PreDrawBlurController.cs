@@ -34,9 +34,18 @@ namespace EightBitLab.Com.BlurView
         private bool _disposed = false;
 
         public Context Context => _blurViewRenderer.Context ?? Xamarin.Essentials.Platform.CurrentActivity;
-
-        public float BlurRadius { get; set; }
-
+        
+        private float _blurRadius = IBlurController.DefaultBlurRadius;
+        public float BlurRadius
+        {
+            get => _blurRadius;
+            set
+            {
+                if (Math.Abs(value - _blurRadius) < float.Epsilon) return;
+                _blurRadius = Math.Max(1, Math.Min(value, 25));
+            }
+        }
+        
         private float _scaleFactor = IBlurController.DefaultScaleFactor;
         public float ScaleFactor
         {
@@ -53,147 +62,195 @@ namespace EightBitLab.Com.BlurView
         
         public PreDrawBlurController(BlurViewLibrary.BlurViewRenderer blurViewRenderer)
         {
-            _blurViewRenderer = blurViewRenderer;
+            try
+            {
+                _blurViewRenderer = blurViewRenderer;
             
-            _rootView = (ViewGroup)(Application.Current.MainPage.Navigation.ModalStack.LastOrDefault() ??
-                         Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault() ??
-                         Application.Current.MainPage ??
-                         Shell.Current.CurrentPage).GetRenderer().View;
+                _rootView = (ViewGroup)(Application.Current.MainPage.Navigation.ModalStack.LastOrDefault() ??
+                                        Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault() ??
+                                        Application.Current.MainPage ??
+                                        Shell.Current.CurrentPage).GetRenderer().View;
             
-            _blurAlgorithm = Build.VERSION.SdkInt >= BuildVersionCodes.S
-                ? new RenderEffectBlur(Context)
-                : new RenderScriptBlur(Context);
+                _blurAlgorithm = Build.VERSION.SdkInt >= BuildVersionCodes.S
+                    ? new RenderEffectBlur(Context)
+                    : new RenderScriptBlur(Context);
             
-            _preDrawListener = new ViewTreeObserverPreDrawListener(this);
+                _preDrawListener = new ViewTreeObserverPreDrawListener(this);
 
-            Init(_blurViewRenderer.MeasuredWidth, _blurViewRenderer.MeasuredHeight);
+                Init(_blurViewRenderer.MeasuredWidth, _blurViewRenderer.MeasuredHeight);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private void Init(int measuredWidth, int measuredHeight)
         {
-            if (_disposed) return;
-            
-            _rootView.ViewTreeObserver?.RemoveOnPreDrawListener(_preDrawListener);
-            _rootView.ViewTreeObserver?.AddOnPreDrawListener(_preDrawListener);
-            
-            var sizeScaler = new SizeScaler(ScaleFactor);
-            if (sizeScaler.IsZeroSized(measuredWidth, measuredHeight))
+            try
             {
-                // Will be initialized later when the View reports a size change
-                _blurViewRenderer.SetWillNotDraw(true);
-                return;
+                if (_disposed) return;
+            
+                _rootView.ViewTreeObserver?.RemoveOnPreDrawListener(_preDrawListener);
+                _rootView.ViewTreeObserver?.AddOnPreDrawListener(_preDrawListener);
+            
+                var sizeScaler = new SizeScaler(ScaleFactor);
+                if (sizeScaler.IsZeroSized(measuredWidth, measuredHeight))
+                {
+                    // Will be initialized later when the View reports a size change
+                    _blurViewRenderer.SetWillNotDraw(true);
+                    return;
+                }
+
+                _blurViewRenderer.SetWillNotDraw(false);
+                var bitmapSize = sizeScaler.Scale(measuredWidth, measuredHeight);
+
+                _internalCanvas.TryDispose();
+                _internalBitmap.TryCleanup();
+            
+                _internalBitmap = Bitmap.CreateBitmap(bitmapSize.Width, bitmapSize.Height, _blurAlgorithm.GetSupportedBitmapConfig());
+                _internalCanvas = new BlurViewCanvas(_internalBitmap, _blurViewRenderer);
+            
+                // Usually it's not needed, because `onPreDraw` updates the blur anyway.
+                // But it handles cases when the PreDraw listener is attached to a different Window, for example
+                // when the BlurView is in a Dialog window, but the root is in the Activity.
+                // Previously it was done in `draw`, but it was causing potential side effects and Jetpack Compose crashes
+                UpdateBlur();
             }
-
-            _blurViewRenderer.SetWillNotDraw(false);
-            var bitmapSize = sizeScaler.Scale(measuredWidth, measuredHeight);
-
-            _internalCanvas.TryDispose();
-            _internalBitmap.TryCleanup();
-            
-            _internalBitmap = Bitmap.CreateBitmap(bitmapSize.Width, bitmapSize.Height, _blurAlgorithm.GetSupportedBitmapConfig());
-            _internalCanvas = new BlurViewCanvas(_internalBitmap, _blurViewRenderer);
-            
-            // Usually it's not needed, because `onPreDraw` updates the blur anyway.
-            // But it handles cases when the PreDraw listener is attached to a different Window, for example
-            // when the BlurView is in a Dialog window, but the root is in the Activity.
-            // Previously it was done in `draw`, but it was causing potential side effects and Jetpack Compose crashes
-            UpdateBlur();
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private void UpdateBlur()
         {
-            if (_disposed || _internalBitmap is null || _internalCanvas is null)  return;
+            try
+            {
+                if (_disposed || _internalBitmap is null || _internalCanvas is null)  return;
 
-            _internalBitmap.EraseColor(Color.Transparent);
+                _internalBitmap.EraseColor(Color.Transparent);
             
-            _internalCanvas.Save();
-            SetupInternalCanvasMatrix();
-            _rootView.Draw(_internalCanvas);
-            _internalCanvas.Restore();
+                _internalCanvas.Save();
+                SetupInternalCanvasMatrix();
+                _rootView.Draw(_internalCanvas);
+                _internalCanvas.Restore();
 
-            if (_internalBitmap is null) return;
-            _internalBitmap = _blurAlgorithm.Blur(_internalBitmap, BlurRadius);
+                if (_internalBitmap is null) return;
+                _internalBitmap = _blurAlgorithm.Blur(_internalBitmap, BlurRadius);
             
-            if (_blurAlgorithm.CanModifyBitmap() || _internalCanvas is null) return;
-            _internalCanvas.SetBitmap(_internalBitmap);
+                if (_blurAlgorithm.CanModifyBitmap() || _internalCanvas is null) return;
+                _internalCanvas.SetBitmap(_internalBitmap);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private void SetupInternalCanvasMatrix()
         {
-            _rootView.GetLocationOnScreen(_rootViewLocation);
-            _blurViewRenderer.GetLocationOnScreen(_blurViewLocation);
+            try
+            {
+                _rootView.GetLocationOnScreen(_rootViewLocation);
+                _blurViewRenderer.GetLocationOnScreen(_blurViewLocation);
 
-            var left = _blurViewLocation[0] - _rootViewLocation[0];
-            var top = _blurViewLocation[1] - _rootViewLocation[1];
+                var left = _blurViewLocation[0] - _rootViewLocation[0];
+                var top = _blurViewLocation[1] - _rootViewLocation[1];
             
-            var scaleFactorH = (float)_blurViewRenderer.Height / _internalBitmap.Height;
-            var scaleFactorW = (float)_blurViewRenderer.Width / _internalBitmap.Width;
+                var scaleFactorH = (float)_blurViewRenderer.Height / _internalBitmap.Height;
+                var scaleFactorW = (float)_blurViewRenderer.Width / _internalBitmap.Width;
 
-            var scaledLeftPosition = -left / scaleFactorW;
-            var scaledTopPosition = -top / scaleFactorH;
+                var scaledLeftPosition = -left / scaleFactorW;
+                var scaledTopPosition = -top / scaleFactorH;
 
-            _internalCanvas.Translate(scaledLeftPosition, scaledTopPosition);
-            _internalCanvas.Scale(1 / scaleFactorW, 1 / scaleFactorH);
+                _internalCanvas.Translate(scaledLeftPosition, scaledTopPosition);
+                _internalCanvas.Scale(1 / scaleFactorW, 1 / scaleFactorH);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public bool Draw(Canvas canvas)
         {
-            if (_disposed || _internalBitmap is null) return true;
-            
-            if (canvas is BlurViewCanvas otherBlurViewCanvas)
+            try
             {
-                // Do not draw to self. This is VERY BAD!!!! It WILL cause drawing to NEVER STOP!!!!
-                // 
-                if (ReferenceEquals(otherBlurViewCanvas, _internalCanvas))
-                {
-                    return false;
-                }
-
-                // No need to draw if the blur views do not overlap. It is inefficient to draw if the views overlap but
-                // it won't cause infinite redraws.
-                //
-                if (!otherBlurViewCanvas.BlurViewRenderer.Intersects(_internalCanvas.BlurViewRenderer))
-                {
-                    Log.Debug("BlurView", "SKIPPED: {0} does NOT intersect {1}", otherBlurViewCanvas.BlurViewRenderer.ContentDescription, _internalCanvas.BlurViewRenderer.ContentDescription);
-                    return false;
-                }
-                
-                // No need to draw if the other blur view is NOT above this one. As drawing this view would not affect
-                // the appearance of the a blue view below itself.
-                //
-                if (!(((otherBlurViewCanvas.BlurViewRenderer as IVisualElementRenderer).Element as View)?.Above((_internalCanvas.BlurViewRenderer as IVisualElementRenderer).Element as View) ?? true))
-                {
-                    Log.Debug("BlurView", "SKIPPED: {0} is above {1}", _internalCanvas.BlurViewRenderer.ContentDescription, otherBlurViewCanvas.BlurViewRenderer.ContentDescription);
-                    return false;
-                }
-            }
-
-            canvas.Save();
-            canvas.Scale((float)_blurViewRenderer.Width / _internalBitmap.Width, (float)_blurViewRenderer.Height / _internalBitmap.Height);
-            _blurAlgorithm.Render(canvas, _internalBitmap);
-            canvas.Restore();
+                if (_disposed || _internalBitmap is null) return true;
             
-            if (OverlayColor != Color.Transparent)
-                canvas.DrawColor(OverlayColor);
+                if (canvas is BlurViewCanvas otherBlurViewCanvas)
+                {
+                    // Do not draw to self. This is VERY BAD!!!! It WILL cause drawing to NEVER STOP!!!!
+                    // 
+                    if (ReferenceEquals(otherBlurViewCanvas, _internalCanvas))
+                    {
+                        return false;
+                    }
 
-            return true;
+                    // No need to draw if the blur views do not overlap. It is inefficient to draw if the views overlap but
+                    // it won't cause infinite redraws.
+                    //
+                    if (!otherBlurViewCanvas.BlurViewRenderer.Intersects(_internalCanvas.BlurViewRenderer))
+                    {
+                        Log.Debug("BlurView", "SKIPPED: {0} does NOT intersect {1}", otherBlurViewCanvas.BlurViewRenderer.ContentDescription, _internalCanvas.BlurViewRenderer.ContentDescription);
+                        return false;
+                    }
+                
+                    // No need to draw if the other blur view is NOT above this one. As drawing this view would not affect
+                    // the appearance of the a blue view below itself.
+                    //
+                    if (!(((otherBlurViewCanvas.BlurViewRenderer as IVisualElementRenderer).Element as View)?.Above((_internalCanvas.BlurViewRenderer as IVisualElementRenderer).Element as View) ?? true))
+                    {
+                        Log.Debug("BlurView", "SKIPPED: {0} is above {1}", _internalCanvas.BlurViewRenderer.ContentDescription, otherBlurViewCanvas.BlurViewRenderer.ContentDescription);
+                        return false;
+                    }
+                }
+
+                canvas.Save();
+                canvas.Scale((float)_blurViewRenderer.Width / _internalBitmap.Width, (float)_blurViewRenderer.Height / _internalBitmap.Height);
+                _blurAlgorithm.Render(canvas, _internalBitmap);
+                canvas.Restore();
+            
+                if (OverlayColor != Color.Transparent)
+                    canvas.DrawColor(OverlayColor);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
         
         public void Resize() => Init(_blurViewRenderer.MeasuredWidth, _blurViewRenderer.MeasuredHeight);
         
         public void Dispose()
         {
-            _disposed = true;
+            try
+            {
+                _disposed = true;
             
-            _blurAlgorithm.Destroy();
-            _preDrawListener.Dispose();
-            _internalCanvas?.TryDispose();
-            _internalBitmap?.TryCleanup();
+                _blurAlgorithm.Destroy();
+                _preDrawListener.Dispose();
+                _internalCanvas?.TryDispose();
+                _internalBitmap?.TryCleanup();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
         
         private class ViewTreeObserverPreDrawListener : Java.Lang.Object, ViewTreeObserver.IOnPreDrawListener
         {
-            private readonly PreDrawBlurController _controller;
+            private readonly PreDrawBlurController? _controller;
 
             public ViewTreeObserverPreDrawListener(IntPtr handle, JniHandleOwnership transfer) : base(handle, transfer) { }
             
@@ -201,7 +258,7 @@ namespace EightBitLab.Com.BlurView
 
             public bool OnPreDraw()
             {
-                _controller.UpdateBlur();
+                _controller?.UpdateBlur();
                 return true;
             }
         }

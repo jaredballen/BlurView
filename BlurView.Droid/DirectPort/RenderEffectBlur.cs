@@ -1,3 +1,4 @@
+using System;
 using Android.Content;
 using Android.Graphics;
 using Android.OS;
@@ -24,21 +25,29 @@ namespace EightBitLab.Com.BlurView
 
         public Bitmap Blur(Bitmap bitmap, float blurRadius)
         {
-            lastBlurRadius = blurRadius;
-
-            if (bitmap.Height != height || bitmap.Width != width)
+            try
             {
-                height = bitmap.Height;
-                width = bitmap.Width;
-                node.SetPosition(0, 0, width, height);
-            }
+                lastBlurRadius = blurRadius;
 
-            Canvas canvas = node.BeginRecording();
-            canvas.DrawBitmap(bitmap, 0, 0, null);
-            node.EndRecording();
-            node.SetRenderEffect(RenderEffect.CreateBlurEffect(blurRadius, blurRadius, Shader.TileMode.Mirror));
-            // Returning not blurred bitmap because the rendering relies on the RenderNode
-            return bitmap;
+                if (bitmap.Height != height || bitmap.Width != width)
+                {
+                    height = bitmap.Height;
+                    width = bitmap.Width;
+                    node.SetPosition(0, 0, width, height);
+                }
+
+                Canvas canvas = node.BeginRecording();
+                canvas.DrawBitmap(bitmap, 0, 0, null);
+                node.EndRecording();
+                node.SetRenderEffect(RenderEffect.CreateBlurEffect(blurRadius, blurRadius, Shader.TileMode.Mirror));
+                // Returning not blurred bitmap because the rendering relies on the RenderNode
+                return bitmap;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public void Destroy()

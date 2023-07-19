@@ -43,6 +43,34 @@ namespace EightBitLab.Com.BlurViewLibrary
         private IDisposable? _themeChangedDisposable;
         
         private global::BlurView.BlurView.Materials Material => (Element as global::BlurView.BlurView)?.Material ?? global::BlurView.BlurView.Materials.System;
+
+        public float BlurRadius => 25;
+
+        public float ScaleFactor => Material.GetMaterialThickness() switch
+        {
+            global::BlurView.BlurView.MaterialThicknesses.UltraThin => UltraThinScaleFactor,
+            global::BlurView.BlurView.MaterialThicknesses.Thin => ThinScaleFactor,
+            global::BlurView.BlurView.MaterialThicknesses.System => SystemScaleFactor,
+            global::BlurView.BlurView.MaterialThicknesses.Thick => ThickScaleFactor,
+            global::BlurView.BlurView.MaterialThicknesses.Chrome => ChromeScaleFactor,
+            _ => 15
+        };
+        
+        public Color OverlayColor => (Material.GetMaterialThickness(), Material.IsDark()) switch
+        {
+            (global::BlurView.BlurView.MaterialThicknesses.UltraThin, true) => UltraThinDark,  
+            (global::BlurView.BlurView.MaterialThicknesses.UltraThin, false) => UltraThinLight,  
+            (global::BlurView.BlurView.MaterialThicknesses.Thin, true) => ThinDark,
+            (global::BlurView.BlurView.MaterialThicknesses.Thin, false) => ThinLight,
+            (global::BlurView.BlurView.MaterialThicknesses.System, true) => SystemDark,
+            (global::BlurView.BlurView.MaterialThicknesses.System, false) => SystemLight,
+            (global::BlurView.BlurView.MaterialThicknesses.Thick, true) => ThickDark,
+            (global::BlurView.BlurView.MaterialThicknesses.Thick, false) => ThickLight,
+            (global::BlurView.BlurView.MaterialThicknesses.Chrome, true) => ChromeDark,
+            (global::BlurView.BlurView.MaterialThicknesses.Chrome, false) => ChromeLight,
+            (_, true) => SystemDark,
+            (_, false) => SystemLight,
+        };
         
         protected override void OnDraw(Canvas? canvas)
         {
@@ -68,26 +96,12 @@ namespace EightBitLab.Com.BlurViewLibrary
         {
             base.OnElementPropertyChanged(sender, e);
 
-            if (string.Equals(e.PropertyName, global::BlurView.BlurView.MaterialProperty.PropertyName))
-            {
-                var material = Material;
-                var thickness = material.GetMaterialThickness();
-                
-                _blurController.BlurRadius = 25;
-                _blurController.ScaleFactor = thickness switch
-                {
-                    global::BlurView.BlurView.MaterialThicknesses.UltraThin => UltraThinScaleFactor,
-                    global::BlurView.BlurView.MaterialThicknesses.Thin => ThinScaleFactor,
-                    global::BlurView.BlurView.MaterialThicknesses.System => SystemScaleFactor,
-                    global::BlurView.BlurView.MaterialThicknesses.Thick => ThickScaleFactor,
-                    global::BlurView.BlurView.MaterialThicknesses.Chrome => ChromeScaleFactor,
-                    _ => 15
-                };
-
-                _blurController.OverlayColor = GetOverlayColor(material);
-            }
+            if (!string.Equals(e.PropertyName, global::BlurView.BlurView.MaterialProperty.PropertyName)) return;
+            _blurController.BlurRadius = BlurRadius;
+            _blurController.ScaleFactor = ScaleFactor;
+            _blurController.OverlayColor = OverlayColor;
         }
-
+        
         protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
         {
             base.OnSizeChanged(w, h, oldw, oldh);
@@ -107,8 +121,11 @@ namespace EightBitLab.Com.BlurViewLibrary
             _themeChangedDisposable = Observable.FromEventPattern<AppThemeChangedEventArgs>(
                     h => Application.Current.RequestedThemeChanged += h,
                     h => Application.Current.RequestedThemeChanged -= h)
-                .Subscribe(_ => _blurController.OverlayColor = GetOverlayColor(Material));
-            _blurController.OverlayColor = GetOverlayColor(Material);
+                .Subscribe(_ => _blurController.OverlayColor = OverlayColor);
+            
+            _blurController.BlurRadius = BlurRadius;
+            _blurController.ScaleFactor = ScaleFactor;
+            _blurController.OverlayColor = OverlayColor;
         }
 
         protected override void OnDetachedFromWindow()
@@ -117,23 +134,6 @@ namespace EightBitLab.Com.BlurViewLibrary
             _themeChangedDisposable?.TryDispose();
             _blurController.TryDispose();
         }
-
-        private Color GetOverlayColor(global::BlurView.BlurView.Materials material)
-            => (material.GetMaterialThickness(), material.IsDark()) switch
-            {
-                (global::BlurView.BlurView.MaterialThicknesses.UltraThin, true) => UltraThinDark,  
-                (global::BlurView.BlurView.MaterialThicknesses.UltraThin, false) => UltraThinLight,  
-                (global::BlurView.BlurView.MaterialThicknesses.Thin, true) => ThinDark,
-                (global::BlurView.BlurView.MaterialThicknesses.Thin, false) => ThinLight,
-                (global::BlurView.BlurView.MaterialThicknesses.System, true) => SystemDark,
-                (global::BlurView.BlurView.MaterialThicknesses.System, false) => SystemLight,
-                (global::BlurView.BlurView.MaterialThicknesses.Thick, true) => ThickDark,
-                (global::BlurView.BlurView.MaterialThicknesses.Thick, false) => ThickLight,
-                (global::BlurView.BlurView.MaterialThicknesses.Chrome, true) => ChromeDark,
-                (global::BlurView.BlurView.MaterialThicknesses.Chrome, false) => ChromeLight,
-                (_, true) => SystemDark,
-                (_, false) => SystemLight,
-            };
     }
 }
            
