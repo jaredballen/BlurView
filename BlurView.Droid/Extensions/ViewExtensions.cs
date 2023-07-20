@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Android.Views;
-using FFImageLoading.Cache;
 using Java.Lang;
 using Xamarin.Forms;
 using Rect = Android.Graphics.Rect;

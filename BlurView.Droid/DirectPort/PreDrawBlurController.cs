@@ -8,7 +8,7 @@ using Android.Util;
 using Android.Views;
 using BlurView.Droid.DirectPort;
 using BlurView.Droid.Extensions;
-using FFImageLoading;
+using BlurView.Extensions;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 using Color = Android.Graphics.Color;
@@ -22,7 +22,7 @@ namespace EightBitLab.Com.BlurView
         private readonly Android.Views.View _rootView;
         private readonly IBlurAlgorithm _blurAlgorithm;
         private readonly ViewTreeObserver.IOnPreDrawListener _preDrawListener;
-        private readonly Paint _overlayPaint = new Paint() { Color = Color.Transparent };
+        private readonly Paint _overlayPaint = new () { Color = Color.Transparent };
         
         private BlurViewCanvas? _internalCanvas;
         private Bitmap? _internalBitmap;

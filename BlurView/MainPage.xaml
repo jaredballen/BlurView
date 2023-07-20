@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:markupExtensions="clr-namespace:BlurView.MarkupExtensions;assembly=BlurView"
              xmlns:views="clr-namespace:BlurView.Views;assembly=BlurView"
              xmlns:blurView="clr-namespace:BlurView;assembly=BlurView"
              x:Class="BlurView.MainPage"
@@ -15,19 +14,40 @@
                Grid.Column="0"
                Grid.ColumnSpan="3"
                Aspect="AspectFill"
-               Source="{markupExtensions:ImageResource BlurView.Resources.Images.starry_mountains.jpg}" />
+               Source="{Binding SelectedBackgroundImageSource}"
+               IsVisible="{Binding ShowBackgroundImage}" />
             
         <views:BlurView Grid.Row="1"
                         Grid.Column="1"
                         AutomationProperties.HelpText="AcrylicView1"
                         Material="{Binding Material}" />
-        
-        <Picker Grid.Row="2"
-                Grid.Column="1"
-                VerticalOptions="Center"
-                ItemsSource="{Binding Materials}"
-                SelectedItem="{Binding SelectedMaterial}" />
-        
+
+        <StackLayout Grid.Row="2"
+                     Grid.Column="1"
+                     VerticalOptions="Center">
+               
+            <Frame VerticalOptions="Center"
+                   Padding="0"
+                   CornerRadius="8">
+                <Picker BackgroundColor="White"
+                        TextColor="Black"
+                        TitleColor="Black"
+                        ItemsSource="{Binding Backgrounds}"
+                        SelectedItem="{Binding SelectedBackground}"/>
+             </Frame>
+            
+            <Frame VerticalOptions="Center"
+                   Padding="0"
+                   CornerRadius="8">
+                <Picker BackgroundColor="White"
+                        TextColor="Black"
+                        TitleColor="Black"
+                        ItemsSource="{Binding Materials}"
+                        SelectedItem="{Binding SelectedMaterial}" />
+            </Frame>
+            
+        </StackLayout>
+
     </Grid>
     
     
