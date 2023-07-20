@@ -1,5 +1,4 @@
-﻿using FFImageLoading.Forms.Platform;
-using Foundation;
+﻿using Foundation;
 using UIKit;
 
 namespace BlurView.iOS
@@ -20,8 +19,6 @@ namespace BlurView.iOS
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             Xamarin.Forms.Forms.Init();
-
-            CachedImageRenderer.InitImageSourceHandler();
             
             LoadApplication(new App());
 

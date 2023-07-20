@@ -1,17 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
-             xmlns:local="clr-namespace:BlurView"
-             xmlns:ffimage="clr-namespace:FFImageLoading.Svg.Forms;assembly=FFImageLoading.Svg.Forms"
-             xmlns:forms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:markupExtensions="clr-namespace:BlurView.MarkupExtensions;assembly=BlurView"
              xmlns:views="clr-namespace:BlurView.Views;assembly=BlurView"
-             ios:Page.UseSafeArea="true"
+             xmlns:blurView="clr-namespace:BlurView;assembly=BlurView"
              x:Class="BlurView.MainPage"
-             x:Name="RootView"
-             Background="White">
-
-    <Grid ColumnDefinitions="*, *"
+             x:DataType="blurView:MainPage">
+    
+    <Grid RowDefinitions="*, 2*, *"
+          ColumnDefinitions="*, 2*, *">
+        
+        <Image Grid.Row="0"
+               Grid.RowSpan="3"
+               Grid.Column="0"
+               Grid.ColumnSpan="3"
+               Aspect="AspectFill"
+               Source="{markupExtensions:ImageResource BlurView.Resources.Images.starry_mountains.jpg}" />
+            
+        <views:BlurView Grid.Row="1"
+                        Grid.Column="1"
+                        AutomationProperties.HelpText="AcrylicView1"
+                        Material="{Binding Material}" />
+        
+        <Picker Grid.Row="2"
+                Grid.Column="1"
+                VerticalOptions="Center"
+                ItemsSource="{Binding Materials}"
+                SelectedItem="{Binding SelectedMaterial}" />
+        
+    </Grid>
+    
+    
+    
+    <!--<Grid ColumnDefinitions="*, *"
           RowSpacing="0"
           ColumnSpacing="0">
 
@@ -35,12 +56,7 @@
                TextColor="Black"
                Text="BlurView Test" />
         
-        <views:BlurView x:Name="AcrylicView1"
-                        Grid.Column="0"
-                        AutomationProperties.HelpText="AcrylicView1"
-                        VerticalOptions="Start"
-                        Material="UltraThinLight"
-                        HeightRequest="50" />
+
         
         
         <forms:SKCanvasView Grid.ColumnSpan="2"
@@ -78,6 +94,6 @@
                         VerticalOptions="Center"
                         HeightRequest="225" />
         
-    </Grid>
+    </Grid>-->
 
 </ContentPage>

@@ -58,8 +58,6 @@ public class BlurView : ContentView
     public BlurView()
     {
         if (Device.RuntimePlatform == Device.iOS)
-        {
             Effects.Add(new BlurEffect());
-        }
     }
 }

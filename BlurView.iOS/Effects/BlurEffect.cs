@@ -22,9 +22,12 @@ public class BlurEffect : PlatformEffect
     protected override void OnAttached()
     {
         _blurEffect = UIBlurEffect.FromStyle(View.Material.ToNative());
-        _blurEffectView = new UIVisualEffectView { Effect = _blurEffect };
-        _blurEffectView.Frame = View.Bounds.ToRectangleF();
-        
+        _blurEffectView = new UIVisualEffectView
+        {
+            Effect = _blurEffect,
+            Frame = View.Bounds.Offset(-View.Bounds.X, -View.Bounds.Y).ToRectangleF()
+        };
+
         if (NativeView.Subviews.Length > 0)
             NativeView.InsertSubview(_blurEffectView, 0);
         else
@@ -47,7 +50,7 @@ public class BlurEffect : PlatformEffect
         if (string.Equals(args.PropertyName, VisualElement.WidthProperty.PropertyName) ||
             string.Equals(args.PropertyName, VisualElement.HeightProperty.PropertyName))
         {
-            _blurEffectView.Frame = View.Bounds.ToRectangleF();
+            _blurEffectView.Frame = View.Bounds.Offset(-View.Bounds.X, -View.Bounds.Y).ToRectangleF();
             return;
         }
 
