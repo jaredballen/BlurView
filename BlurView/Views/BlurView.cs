@@ -1,6 +1,7 @@
+using BlurView.Effects;
 using Xamarin.Forms;
 
-namespace BlurView;
+namespace BlurView.Views;
 
 public class BlurView : ContentView
 {
@@ -53,4 +54,12 @@ public class BlurView : ContentView
         set => SetValue(MaterialProperty, value);
     }
     #endregion
+
+    public BlurView()
+    {
+        if (Device.RuntimePlatform == Device.iOS)
+        {
+            Effects.Add(new BlurEffect());
+        }
+    }
 }

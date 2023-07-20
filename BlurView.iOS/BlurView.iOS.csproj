@@ -89,6 +89,9 @@
         <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Include="Effects\BlurEffect.cs" />
+        <Compile Include="Effects\Effects.cs" />
+        <Compile Include="Extensions\MaterialExtensions.cs" />
         <Compile Include="Main.cs" />
         <Compile Include="AppDelegate.cs" />
         <None Include="Entitlements.plist" />
