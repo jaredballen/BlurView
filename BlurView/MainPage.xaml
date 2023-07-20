@@ -31,18 +31,11 @@
                FontAttributes="Bold"
                Text="BlurView Test" />
         
-        <!--<local:AcrylicView Grid.Column="0"
-                                  AutomationProperties.HelpText="AcrylicView1"
-                        BackgroundColor="#73007300"
-                        BlurRadius="25"
-                        VerticalOptions="Start"
-                        HeightRequest="50" />-->
-        
         <local:BlurView x:Name="AcrylicView1"
                         Grid.Column="0"
                         AutomationProperties.HelpText="AcrylicView1"
                         VerticalOptions="Start"
-                        Material="UltraThinDark"
+                        Material="UltraThin"
                         HeightRequest="50" />
         
         
@@ -58,22 +51,7 @@
                    HorizontalOptions="Center"
                    VerticalOptions="Center"
                    WidthRequest="75"
-                   HeightRequest="250"
-                   >
-            <!--<local:AcrylicView AutomationProperties.HelpText="AcrylicView2"
-                               BackgroundColor="#73007300"
-                               Elevation="10"
-                               BlurRadius="10">
-        
-        <BoxView Grid.Column="0"
-                 Grid.ColumnSpan="2"
-                 BackgroundColor="Yellow"
-                 HorizontalOptions="Center"
-                 VerticalOptions="Center"
-                 WidthRequest="50"
-                 HeightRequest="50" />
-
-            </local:AcrylicView>-->
+                   HeightRequest="250">
             
             <local:BlurView x:Name="AcrylicView2"
                             AutomationProperties.HelpText="AcrylicView2"
@@ -86,18 +64,6 @@
             </local:BlurView>
             
         </ContentView>
-
-        
-        <!--<local:AcrylicView Grid.Column="0"
-                                  
-                                  WidthRequest="100"
-                                  HorizontalOptions="End"
-                                  AutomationProperties.HelpText="AcrylicView3"
-                                  BackgroundColor="#74740000"
-                           Elevation="1"
-                           BlurRadius="12"
-                           VerticalOptions="Center"
-                           HeightRequest="225" />-->
         
         <local:BlurView x:Name="AcrylicView3"
                         Grid.Column="0"
@@ -107,6 +73,7 @@
                         AutomationProperties.HelpText="AcrylicView3"
                         VerticalOptions="Center"
                         HeightRequest="225" />
+        
     </Grid>
 
 </ContentPage>
