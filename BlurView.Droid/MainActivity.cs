@@ -8,8 +8,12 @@ using SKCanvasViewRenderer = BlurView.Droid.Renderers.SKCanvasViewRenderer;
 
 namespace BlurView.Droid
 {
-    [Activity(Label = "BlurView", Theme = "@style/MainTheme", MainLauncher = true,
-        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(
+        Label = "BlurView",
+        Theme = "@style/MainTheme",
+        MainLauncher = true,
+        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode
+    )]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
         protected override void OnCreate(Bundle savedInstanceState)
@@ -25,12 +29,10 @@ namespace BlurView.Droid
             CachedImageRenderer.Init(true);
             CachedImageRenderer.InitImageViewHandler();
 
-            // Need to do this to register the new svg canvas view rendered for Android
+            // This is a manual registration technique for custom renderers.
             // 
-            // Dependency.Register(typeof (FileImageSource), typeof (FFImageLoadingImageViewHandler));
-            
             Registrar.Registered.Register(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
-        
+
             LoadApplication(new App());
         }
     }

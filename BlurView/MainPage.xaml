@@ -55,7 +55,7 @@
             
             <local:BlurView x:Name="AcrylicView2"
                             AutomationProperties.HelpText="AcrylicView2"
-                            Material="ThinLight">
+                            Material="Thin">
                 <BoxView BackgroundColor="Yellow"
                          HorizontalOptions="Center"
                          VerticalOptions="Center"
@@ -67,7 +67,7 @@
         
         <local:BlurView x:Name="AcrylicView3"
                         Grid.Column="0"
-                        Material="SystemDark"
+                        Material="System"
                         WidthRequest="100"
                         HorizontalOptions="End"
                         AutomationProperties.HelpText="AcrylicView3"
