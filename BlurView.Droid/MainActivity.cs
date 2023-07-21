@@ -11,7 +11,11 @@ namespace BlurView.Droid
         Label = "BlurView",
         Theme = "@style/MainTheme",
         MainLauncher = true,
-        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode
+        ScreenOrientation = ScreenOrientation.Portrait, 
+        ConfigurationChanges = 
+            ConfigChanges.ScreenSize | 
+            ConfigChanges.Orientation | 
+            ConfigChanges.UiMode
     )]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {

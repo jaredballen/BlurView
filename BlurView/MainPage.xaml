@@ -1,47 +1,169 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
              xmlns:views="clr-namespace:BlurView.Views;assembly=BlurView"
              xmlns:blurView="clr-namespace:BlurView;assembly=BlurView"
+             xmlns:forms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             ios:Page.UseSafeArea="true"
              x:Class="BlurView.MainPage"
-             x:DataType="blurView:MainPage">
+             x:DataType="blurView:MainPage"
+             BackgroundColor="Black"
+             xct:StatusBarEffect.Color="Black"
+             xct:StatusBarEffect.Style="LightContent">
+    
+    <ContentPage.Resources>
+        <blurView:AndMultiConverter x:Key="AndMultiConverter" />
+        <xct:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    </ContentPage.Resources>
     
     <Grid RowDefinitions="*, 2*, *"
-          ColumnDefinitions="*, 2*, *">
+          ColumnDefinitions="*, *, *, *"
+          BackgroundColor="{Binding SelectedBackgroundColor}">
         
+        <ScrollView Grid.Row="0"
+                    Grid.RowSpan="3"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="4"
+                    Orientation="Both"
+                    HorizontalScrollBarVisibility="Always"
+                    VerticalScrollBarVisibility="Always">
+            
+            <ScrollView.IsVisible>
+                <MultiBinding Converter="{StaticResource AndMultiConverter}">
+                    <Binding Path="IsToggled" 
+                             Source="{x:Reference Pan}" />
+                    <Binding Path="ShowBackgroundImage" />
+                </MultiBinding>
+            </ScrollView.IsVisible>
+               
+            <Image HorizontalOptions="Start"
+                   VerticalOptions="Start"
+                   WidthRequest="1000"
+                   HeightRequest="1000"
+                   Aspect="AspectFill"
+                   Source="{Binding SelectedBackgroundImageSource}" />
+            
+        </ScrollView>
+
         <Image Grid.Row="0"
                Grid.RowSpan="3"
                Grid.Column="0"
-               Grid.ColumnSpan="3"
+               Grid.ColumnSpan="4"
                Aspect="AspectFill"
-               Source="{Binding SelectedBackgroundImageSource}"
-               IsVisible="{Binding ShowBackgroundImage}" />
-            
+               Source="{Binding SelectedBackgroundImageSource}">
+            <Image.IsVisible>
+                <MultiBinding Converter="{StaticResource AndMultiConverter}">
+                    <Binding Path="IsToggled" 
+                             Source="{x:Reference Pan}"
+                             Converter="{StaticResource InvertedBoolConverter}" />
+                    <Binding Path="ShowBackgroundImage" />
+                </MultiBinding>
+            </Image.IsVisible>
+        </Image>
+        
+        <forms:SKCanvasView Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            PaintSurface="SKCanvasView_OnPaintSurface"
+                            IsVisible="{Binding Path=IsToggled, Source={x:Reference Multiple}}" />
+
+        <Label Grid.Row="0"
+               Grid.RowSpan="2"
+               Grid.Column="0"
+               Grid.ColumnSpan="2"
+               VerticalOptions="Center"
+               Padding="8"
+               TextColor="White"
+               FontSize="28"
+               Text="SKCanvasView"
+               IsVisible="{Binding Path=IsToggled, Source={x:Reference Multiple}}" />
+        
+        <views:BlurView Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="4"
+                        VerticalOptions="Center"
+                        HeightRequest="100"
+                        Margin="16, 0"
+                        Material="{Binding Material}"
+                        IsVisible="{Binding Path=IsToggled, Source={x:Reference Multiple}}">
+            <Grid ColumnDefinitions="*, *, *, *">
+                <BoxView Grid.Column="0"
+                         Grid.ColumnSpan="4"
+                         BackgroundColor="Blue"
+                         VerticalOptions="Center"
+                         HeightRequest="15" />
+                
+                <BoxView Grid.Column="0"
+                         Grid.ColumnSpan="2"
+                         BackgroundColor="Red"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         WidthRequest="50"
+                         HeightRequest="50" />
+                
+                <BoxView Grid.Column="2"
+                         Grid.ColumnSpan="2"
+                         BackgroundColor="Green"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         CornerRadius="25"
+                         WidthRequest="50"
+                         HeightRequest="50" />
+            </Grid>
+        </views:BlurView>
+        
         <views:BlurView Grid.Row="1"
                         Grid.Column="1"
+                        Grid.ColumnSpan="2"
                         AutomationProperties.HelpText="AcrylicView1"
                         Material="{Binding Material}" />
-
+        
         <StackLayout Grid.Row="2"
                      Grid.Column="1"
+                     Grid.ColumnSpan="2"
                      VerticalOptions="Center">
-               
-            <Frame VerticalOptions="Center"
-                   Padding="0"
+
+            <Frame HorizontalOptions="Center"
+                   Padding="4"
+                   CornerRadius="8">
+                <StackLayout Orientation="Horizontal">
+                    <Label VerticalOptions="Center"
+                           TextColor="Black"
+                           Text="Multiple: " />
+                    <Switch x:Name="Multiple" />
+                </StackLayout>
+            </Frame>
+            
+            <Frame HorizontalOptions="Center"
+                   Padding="4"
+                   CornerRadius="8">
+                <StackLayout Orientation="Horizontal">
+                    <Label VerticalOptions="Center"
+                           TextColor="Black"
+                           Text="Pan: " />
+                    <Switch x:Name="Pan" />
+                </StackLayout>
+            </Frame>
+            
+            <Frame Padding="0"
                    CornerRadius="8">
                 <Picker BackgroundColor="White"
                         TextColor="Black"
                         TitleColor="Black"
+                        HorizontalTextAlignment="Center"
                         ItemsSource="{Binding Backgrounds}"
                         SelectedItem="{Binding SelectedBackground}"/>
              </Frame>
             
-            <Frame VerticalOptions="Center"
-                   Padding="0"
+            <Frame Padding="0"
                    CornerRadius="8">
                 <Picker BackgroundColor="White"
                         TextColor="Black"
                         TitleColor="Black"
+                        HorizontalTextAlignment="Center"
                         ItemsSource="{Binding Materials}"
                         SelectedItem="{Binding SelectedMaterial}" />
             </Frame>
@@ -50,70 +172,4 @@
 
     </Grid>
     
-    
-    
-    <!--<Grid ColumnDefinitions="*, *"
-          RowSpacing="0"
-          ColumnSpacing="0">
-
-        <ScrollView Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    VerticalScrollBarVisibility="Always"
-                    HorizontalScrollBarVisibility="Always">
-               
-            <ffimage:SvgCachedImage Aspect="Fill"
-                                    HorizontalOptions="Start"
-                                    WidthRequest="2048"
-                                    Source="resource://BlurView.Resources.Images.background.svg" />
-            
-        </ScrollView>
-        
-        <Label Grid.ColumnSpan="2"
-               HorizontalOptions="Center"
-               VerticalOptions="Start"
-               FontSize="Large"
-               FontAttributes="Bold"
-               TextColor="Black"
-               Text="BlurView Test" />
-        
-
-        
-        
-        <forms:SKCanvasView Grid.ColumnSpan="2"
-                            HorizontalOptions="Center"
-                            VerticalOptions="Center"
-                            HeightRequest="100"
-                            WidthRequest="100"
-                            PaintSurface="SKCanvasView_OnPaintSurface"/>
-        
-        <ContentView Grid.Column="0"
-                   Grid.ColumnSpan="2"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"
-                   WidthRequest="75"
-                   HeightRequest="250">
-            
-            <views:BlurView x:Name="AcrylicView2"
-                            AutomationProperties.HelpText="AcrylicView2"
-                            Material="Thin">
-                <BoxView BackgroundColor="Yellow"
-                         HorizontalOptions="Center"
-                         VerticalOptions="Center"
-                         WidthRequest="50"
-                         HeightRequest="50" />
-            </views:BlurView>
-            
-        </ContentView>
-        
-        <views:BlurView x:Name="AcrylicView3"
-                        Grid.Column="0"
-                        Material="System"
-                        WidthRequest="100"
-                        HorizontalOptions="End"
-                        AutomationProperties.HelpText="AcrylicView3"
-                        VerticalOptions="Center"
-                        HeightRequest="225" />
-        
-    </Grid>-->
-
 </ContentPage>

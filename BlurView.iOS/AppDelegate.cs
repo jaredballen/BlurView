@@ -24,5 +24,6 @@ namespace BlurView.iOS
 
             return base.FinishedLaunching(app, options);
         }
+        
     }
 }
